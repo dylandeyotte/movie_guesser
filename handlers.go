@@ -3,14 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
-
-	"github.com/joho/godotenv"
 )
 
-func handlerActorFetch(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) {
 
 	client := &http.Client{}
 
@@ -24,16 +20,7 @@ func handlerActorFetch(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Request creation failed", err)
 	}
 
-	godotenv.Load()
-
-	tmdbToken := os.Getenv("TMDB_TOKEN")
-	if tmdbToken == "" {
-		log.Fatal("No TMDB token set")
-	}
-
-	bearerToken := fmt.Sprintf("Bearer %v", tmdbToken)
-
-	req.Header.Set("Authorization", bearerToken)
+	req.Header.Set("Authorization", cfg.tmdbToken)
 
 	resp, err := client.Do(req)
 	if err != nil {
