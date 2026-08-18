@@ -17,36 +17,7 @@ import (
 func main() {
 
 	removeList := []string{
-		"Yvonne Yung Hung",
-		"Yoon Yool",
-		"Anastasia Shestakova",
-		"Mayuko Sasaki",
-		"Ui Mihara",
-		"Shoko Fujimura",
-		"Julia Doyle",
-		"Min Do-yoon",
-		"Anaïs Bret",
-		"Inde Navarrette",
-		"Charlie Cho Cha-Lee",
-		"Daniella Wang",
-		"Christopher Nolan",
-		"Diana Pang Dan",
-		"Milly Alcock",
-		"Amélie Hoeferle",
-		"Sophie Ngan Chin-Man",
-		"Ahn Ha-young",
-		"Kōichi Imaizumi",
-		"Yui Kitamura",
-		"Yuka Tano",
-		"Mireille Enos",
-		"Bridget Regan",
-		"Truman Hanks",
-		"Jung Hae-in",
-		"Riley Chung",
-		"Angelica Hart",
-		"Simon Baker",
-		"Emma Ho",
-		"Alan Ritchson",
+		"Minka Kelly",
 	}
 	// Load data from ENV
 	godotenv.Load()
@@ -65,6 +36,6 @@ func main() {
 		if err := dbQueries.RemoveActor(context.Background(), actor); err != nil {
 			fmt.Printf("Failed to remove actor %v from database: %v\n", actor, err)
 		}
-		fmt.Printf("removed %v from database\n", err)
+		fmt.Printf("removed %v from database\n", actor)
 	}
 }

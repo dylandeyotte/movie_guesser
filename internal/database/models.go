@@ -4,8 +4,17 @@
 
 package database
 
+import (
+	"time"
+)
+
 type Actor struct {
 	ID   int32
 	Name string
 	Used bool
+}
+
+type Game struct {
+	Date    time.Time
+	ActorID int32
 }

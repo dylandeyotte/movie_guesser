@@ -73,7 +73,7 @@ func main() {
 
 	client := &http.Client{}
 
-	url := "https://api.themoviedb.org/3/person/popular?page=5"
+	url := "https://api.themoviedb.org/3/person/popular?page=44"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -100,8 +100,16 @@ func main() {
 	}
 
 	for _, actor := range AD.Results {
-		if actor.KnownFor[0].VoteCount < 1000 {
+		if actor.KnownFor[0].VoteCount < 4000 {
 			fmt.Printf("RANDO ALERT: %v\n", actor.Name)
+			continue
+		}
+		if actor.KnownForDepartment != "Acting" {
+			fmt.Printf("NOT AN ACTOR: %v\n", actor.Name)
+			continue
+		}
+		if actor.KnownFor[0].MediaType == "tv" || actor.KnownFor[1].MediaType == "tv" || actor.KnownFor[2].MediaType == "tv" {
+			fmt.Printf("TV actor: %v\n", actor.Name)
 			continue
 		}
 		actor, err := dbQueries.InsertActor(context.Background(), database.InsertActorParams{

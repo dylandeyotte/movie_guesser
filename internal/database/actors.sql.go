@@ -31,6 +31,17 @@ func (q *Queries) InsertActor(ctx context.Context, arg InsertActorParams) (Actor
 	return i, err
 }
 
+const markActor = `-- name: MarkActor :exec
+UPDATE actors 
+SET used = TRUE
+WHERE name = $1
+`
+
+func (q *Queries) MarkActor(ctx context.Context, name string) error {
+	_, err := q.db.ExecContext(ctx, markActor, name)
+	return err
+}
+
 const removeActor = `-- name: RemoveActor :exec
 DELETE FROM actors
 WHERE name = $1
@@ -66,4 +77,17 @@ func (q *Queries) ReturnActors(ctx context.Context) ([]Actor, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const selectActor = `-- name: SelectActor :one
+SELECT id, name, used FROM actors
+ORDER BY RANDOM()
+LIMIT 1
+`
+
+func (q *Queries) SelectActor(ctx context.Context) (Actor, error) {
+	row := q.db.QueryRowContext(ctx, selectActor)
+	var i Actor
+	err := row.Scan(&i.ID, &i.Name, &i.Used)
+	return i, err
 }

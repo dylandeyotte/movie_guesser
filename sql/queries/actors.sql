@@ -13,3 +13,13 @@ WHERE name = $1;
 
 -- name: ReturnActors :many
 SELECT * FROM actors;
+
+-- name: SelectActor :one
+SELECT * FROM actors
+ORDER BY RANDOM()
+LIMIT 1;
+
+-- name: MarkActor :exec
+UPDATE actors 
+SET used = TRUE
+WHERE name = $1;
