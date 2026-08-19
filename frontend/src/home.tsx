@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useEffect } from "react";
 
-type actorInfo = {
+type gameInfo = {
   actor: string;
+  gamedate: string;
 };
 
 export function Home() {
-  const [info, setInfo] = useState<actorInfo>();
+  const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
   const [answer, setAnswer] = useState("");
   async function datarino() {
@@ -33,12 +34,17 @@ export function Home() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        Guess: guess,
+        guess: guess,
+        gamedate: info?.gamedate,
       }),
     });
 
     const data = await response.json();
     setAnswer(data);
+
+    if (response.ok) {
+      setGuess("");
+    }
   };
 
   useEffect(() => {
@@ -50,7 +56,7 @@ export function Home() {
       <div>{info?.actor}</div>
       <form onSubmit={submitGuess}>
         <label>Guess</label>
-        <input type="guess" onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
+        <input type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
       </form>
       <div>{answer}</div>
     </div>

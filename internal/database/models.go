@@ -4,10 +4,6 @@
 
 package database
 
-import (
-	"time"
-)
-
 type Actor struct {
 	ID   int32
 	Name string
@@ -15,6 +11,10 @@ type Actor struct {
 }
 
 type Game struct {
-	Date    time.Time
-	ActorID int32
+	Date      string
+	ActorID   int32
+	ActorName string
+	Film1     string
+	Film2     string
+	Film3     string
 }

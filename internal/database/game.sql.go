@@ -7,26 +7,66 @@ package database
 
 import (
 	"context"
-	"time"
 )
 
 const createGame = `-- name: CreateGame :one
-INSERT INTO game(date, actor_id)
+INSERT INTO game(date, actor_id, actor_name, film_1, film_2, film_3)
 VALUES (
   $1,
-  $2
+  $2,
+  $3,
+  $4,
+  $5,
+  $6
 )
-RETURNING date, actor_id
+RETURNING date, actor_id, actor_name, film_1, film_2, film_3
 `
 
 type CreateGameParams struct {
-	Date    time.Time
-	ActorID int32
+	Date      string
+	ActorID   int32
+	ActorName string
+	Film1     string
+	Film2     string
+	Film3     string
 }
 
 func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (Game, error) {
-	row := q.db.QueryRowContext(ctx, createGame, arg.Date, arg.ActorID)
+	row := q.db.QueryRowContext(ctx, createGame,
+		arg.Date,
+		arg.ActorID,
+		arg.ActorName,
+		arg.Film1,
+		arg.Film2,
+		arg.Film3,
+	)
 	var i Game
-	err := row.Scan(&i.Date, &i.ActorID)
+	err := row.Scan(
+		&i.Date,
+		&i.ActorID,
+		&i.ActorName,
+		&i.Film1,
+		&i.Film2,
+		&i.Film3,
+	)
+	return i, err
+}
+
+const returnGame = `-- name: ReturnGame :one
+SELECT date, actor_id, actor_name, film_1, film_2, film_3 FROM game
+WHERE date = $1
+`
+
+func (q *Queries) ReturnGame(ctx context.Context, date string) (Game, error) {
+	row := q.db.QueryRowContext(ctx, returnGame, date)
+	var i Game
+	err := row.Scan(
+		&i.Date,
+		&i.ActorID,
+		&i.ActorName,
+		&i.Film1,
+		&i.Film2,
+		&i.Film3,
+	)
 	return i, err
 }
