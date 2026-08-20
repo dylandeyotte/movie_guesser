@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"GitHub.com/dylandeyotte/movie_guesser/internal/database"
+
+	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) {
@@ -109,6 +111,7 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 
 	params := parameters{}
 
+	// Decode response
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&params); err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Decoding error", err)
@@ -122,18 +125,35 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if strings.EqualFold(params.Guess, game.Film1) {
-		respondWithJSON(w, http.StatusOK, "Film 1 Correct")
-		return
-	} else if strings.EqualFold(params.Guess, game.Film2) {
-		respondWithJSON(w, http.StatusOK, "Film 2 Correct")
-		return
-	} else if strings.EqualFold(params.Guess, game.Film3) {
-		respondWithJSON(w, http.StatusOK, "Film 2 Correct")
+	// Retrieve and parse player ID
+	id := r.Header.Get("X-Played-ID")
+	playerID, err := uuid.Parse(id)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error parsing UUID", err)
 		return
 	}
 
-	// Store guess in database
+	type Payload struct {
+		Film    string `json:"film"`
+		Verdict string `json:"verdict"`
+	}
 
-	respondWithJSON(w, http.StatusOK, "Incorrect")
+	// Check if guess matches films, create guess in database
+	if strings.EqualFold(params.Guess, game.Film1) || strings.EqualFold(params.Guess, game.Film2) || strings.EqualFold(params.Guess, game.Film3) {
+		payload, err := cfg.guessResponse(params.GameDate, playerID, params.Guess, true)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)
+			return
+		}
+		respondWithJSON(w, http.StatusOK, payload)
+		return
+	}
+
+	payload, err := cfg.guessResponse(params.GameDate, playerID, params.Guess, false)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, payload)
 }

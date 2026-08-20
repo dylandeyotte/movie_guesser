@@ -4,6 +4,10 @@
 
 package database
 
+import (
+	"github.com/google/uuid"
+)
+
 type Actor struct {
 	ID   int32
 	Name string
@@ -17,4 +21,12 @@ type Game struct {
 	Film1     string
 	Film2     string
 	Film3     string
+}
+
+type Guess struct {
+	ID       uuid.UUID
+	Date     string
+	PlayerID uuid.UUID
+	Guess    string
+	Verdict  bool
 }

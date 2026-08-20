@@ -1,11 +1,45 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+
+	"GitHub.com/dylandeyotte/movie_guesser/internal/database"
+	"github.com/google/uuid"
 )
+
+type Payload struct {
+	Verdict bool `json:"verdict"`
+	Strikes int  `json:"strikes"`
+}
+
+// ALREADY GUESSED???
+func (cfg *apiConfig) guessResponse(date string, playerID uuid.UUID, guess string, verdict bool) (Payload, error) {
+	_, err := cfg.database.CreateGuess(context.Background(), database.CreateGuessParams{
+		Date:     date,
+		PlayerID: playerID,
+		Guess:    guess,
+		Verdict:  verdict,
+	})
+	if err != nil {
+		return Payload{}, err
+	}
+
+	strikes, err := cfg.database.StrikeCount(context.Background(), database.StrikeCountParams{
+		Date:     date,
+		PlayerID: playerID,
+	})
+	if err != nil {
+		return Payload{}, err
+	}
+	return Payload{
+		Verdict: verdict,
+		Strikes: int(strikes),
+	}, nil
+}
 
 func respondWithError(w http.ResponseWriter, code int, msg string, err error) {
 	if err != nil {

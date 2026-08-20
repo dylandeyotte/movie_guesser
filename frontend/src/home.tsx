@@ -6,10 +6,23 @@ type gameInfo = {
   gamedate: string;
 };
 
+// type gameResponse = {
+//   film: string;
+//   verdict: string
+// }
+
 export function Home() {
   const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
-  const [answer, setAnswer] = useState("");
+  const [verdict, setVerdict] = useState();
+
+  let playerID = localStorage.getItem("playerID");
+
+  if (!playerID) {
+    playerID = crypto.randomUUID();
+    localStorage.setItem("playerID", playerID);
+  }
+
   async function datarino() {
     try {
       const response = await fetch("http://localhost:8080/api/actor", {
@@ -32,6 +45,7 @@ export function Home() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-Player-ID": playerID,
       },
       body: JSON.stringify({
         guess: guess,
@@ -40,7 +54,7 @@ export function Home() {
     });
 
     const data = await response.json();
-    setAnswer(data);
+    setVerdict(data.verdict);
 
     if (response.ok) {
       setGuess("");
@@ -58,7 +72,7 @@ export function Home() {
         <label>Guess</label>
         <input type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
       </form>
-      <div>{answer}</div>
+      <div>{verdict}</div>
     </div>
   );
 }
