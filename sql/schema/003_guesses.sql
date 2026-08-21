@@ -1,6 +1,7 @@
 -- +goose Up
 CREATE TABLE guesses (
   id UUID PRIMARY KEY,
+  created_at TIMESTAMP NOT NULL,
   date TEXT NOT NULL,
   player_id UUID NOT NULL,
   guess TEXT NOT NUll,

@@ -1,6 +1,7 @@
 -- +goose Up
 CREATE TABLE game (
   date TEXT PRIMARY KEY,
+  created_at TIMESTAMP NOT NULL,
   actor_id INT NOT NULL,
   actor_name TEXT NOT NULL,
   film_1 TEXT NOT NULL,

@@ -6,15 +6,18 @@ type gameInfo = {
   gamedate: string;
 };
 
-// type gameResponse = {
-//   film: string;
-//   verdict: string
-// }
+type gameResponse = {
+  verdict: boolean;
+  strikes: number;
+  guess: string;
+  playerid: string;
+  repeat: boolean;
+};
 
 export function Home() {
   const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
-  const [verdict, setVerdict] = useState();
+  const [gameResponse, setgameResponse] = useState<gameResponse>();
 
   let playerID = localStorage.getItem("playerID");
 
@@ -23,7 +26,9 @@ export function Home() {
     localStorage.setItem("playerID", playerID);
   }
 
-  async function datarino() {
+  // Need to pull game state
+
+  async function gamePull() {
     try {
       const response = await fetch("http://localhost:8080/api/actor", {
         headers: {
@@ -54,25 +59,36 @@ export function Home() {
     });
 
     const data = await response.json();
-    setVerdict(data.verdict);
+    setgameResponse(data);
 
     if (response.ok) {
       setGuess("");
     }
+
+    console.log(data);
   };
 
   useEffect(() => {
-    datarino();
+    gamePull();
   }, []);
 
   return (
     <div>
       <div>{info?.actor}</div>
-      <form onSubmit={submitGuess}>
-        <label>Guess</label>
-        <input type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
-      </form>
-      <div>{verdict}</div>
+      <div>
+        {gameResponse && gameResponse?.strikes >= 3 ? (
+          "Game over"
+        ) : (
+          <div>
+            <form onSubmit={submitGuess}>
+              <label>Guess</label>
+              <input type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
+            </form>
+            <div>{gameResponse?.verdict === true ? `${gameResponse.guess}: correct` : `${gameResponse?.guess}: incorrect`}</div>
+            <div>strikes: {gameResponse?.strikes}</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

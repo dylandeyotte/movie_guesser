@@ -12,15 +12,16 @@ import (
 )
 
 const createGuess = `-- name: CreateGuess :one
-INSERT INTO guesses(id, date, player_id, guess, verdict)
+INSERT INTO guesses(id, created_at, date, player_id, guess, verdict)
 VALUES (
   gen_random_UUID(),
+  NOW(),
   $1,
   $2,
   $3,
   $4
 )
-RETURNING id, date, player_id, guess, verdict
+RETURNING id, created_at, date, player_id, guess, verdict
 `
 
 type CreateGuessParams struct {
@@ -40,6 +41,34 @@ func (q *Queries) CreateGuess(ctx context.Context, arg CreateGuessParams) (Guess
 	var i Guess
 	err := row.Scan(
 		&i.ID,
+		&i.CreatedAt,
+		&i.Date,
+		&i.PlayerID,
+		&i.Guess,
+		&i.Verdict,
+	)
+	return i, err
+}
+
+const fetchGuess = `-- name: FetchGuess :one
+SELECT id, created_at, date, player_id, guess, verdict FROM guesses
+WHERE date = $1
+AND player_id = $2
+AND guess = $3
+`
+
+type FetchGuessParams struct {
+	Date     string
+	PlayerID uuid.UUID
+	Guess    string
+}
+
+func (q *Queries) FetchGuess(ctx context.Context, arg FetchGuessParams) (Guess, error) {
+	row := q.db.QueryRowContext(ctx, fetchGuess, arg.Date, arg.PlayerID, arg.Guess)
+	var i Guess
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
 		&i.Date,
 		&i.PlayerID,
 		&i.Guess,

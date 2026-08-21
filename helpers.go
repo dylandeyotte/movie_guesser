@@ -12,13 +12,41 @@ import (
 )
 
 type Payload struct {
-	Verdict bool `json:"verdict"`
-	Strikes int  `json:"strikes"`
+	Verdict  bool   `json:"verdict"`
+	Strikes  int    `json:"strikes"`
+	Guess    string `json:"guess"`
+	PlayerID string `json:"playerid"`
+	Repeat   bool   `json:"repeat"`
 }
 
-// ALREADY GUESSED???
 func (cfg *apiConfig) guessResponse(date string, playerID uuid.UUID, guess string, verdict bool) (Payload, error) {
-	_, err := cfg.database.CreateGuess(context.Background(), database.CreateGuessParams{
+
+	// Check if guess has been guessed and return if so
+	fetchedGuess, err := cfg.database.FetchGuess(context.Background(), database.FetchGuessParams{
+		Date:     date,
+		PlayerID: playerID,
+		Guess:    guess,
+	})
+	// If film has been guessed, get strikes and return
+	if err == nil {
+		// Calculate strike count
+		strikes, err := cfg.database.StrikeCount(context.Background(), database.StrikeCountParams{
+			Date:     date,
+			PlayerID: playerID,
+		})
+		if err != nil {
+			return Payload{}, err
+		}
+		return Payload{
+			Verdict:  fetchedGuess.Verdict,
+			Strikes:  int(strikes),
+			Guess:    fetchedGuess.Guess,
+			PlayerID: uuid.UUID.String(fetchedGuess.PlayerID),
+			Repeat:   true,
+		}, nil
+	}
+	// Create guess in database if new
+	_, err = cfg.database.CreateGuess(context.Background(), database.CreateGuessParams{
 		Date:     date,
 		PlayerID: playerID,
 		Guess:    guess,
@@ -27,7 +55,7 @@ func (cfg *apiConfig) guessResponse(date string, playerID uuid.UUID, guess strin
 	if err != nil {
 		return Payload{}, err
 	}
-
+	// Calculate strike count
 	strikes, err := cfg.database.StrikeCount(context.Background(), database.StrikeCountParams{
 		Date:     date,
 		PlayerID: playerID,
@@ -35,9 +63,13 @@ func (cfg *apiConfig) guessResponse(date string, playerID uuid.UUID, guess strin
 	if err != nil {
 		return Payload{}, err
 	}
+	// Return payload
 	return Payload{
-		Verdict: verdict,
-		Strikes: int(strikes),
+		Verdict:  verdict,
+		Strikes:  int(strikes),
+		Guess:    guess,
+		PlayerID: uuid.UUID.String(playerID),
+		Repeat:   false,
 	}, nil
 }
 

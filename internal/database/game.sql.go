@@ -10,16 +10,17 @@ import (
 )
 
 const createGame = `-- name: CreateGame :one
-INSERT INTO game(date, actor_id, actor_name, film_1, film_2, film_3)
+INSERT INTO game(date, created_at, actor_id, actor_name, film_1, film_2, film_3)
 VALUES (
   $1,
+  NOW(),
   $2,
   $3,
   $4,
   $5,
   $6
 )
-RETURNING date, actor_id, actor_name, film_1, film_2, film_3
+RETURNING date, created_at, actor_id, actor_name, film_1, film_2, film_3
 `
 
 type CreateGameParams struct {
@@ -43,6 +44,7 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (Game, e
 	var i Game
 	err := row.Scan(
 		&i.Date,
+		&i.CreatedAt,
 		&i.ActorID,
 		&i.ActorName,
 		&i.Film1,
@@ -53,7 +55,7 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (Game, e
 }
 
 const returnGame = `-- name: ReturnGame :one
-SELECT date, actor_id, actor_name, film_1, film_2, film_3 FROM game
+SELECT date, created_at, actor_id, actor_name, film_1, film_2, film_3 FROM game
 WHERE date = $1
 `
 
@@ -62,6 +64,7 @@ func (q *Queries) ReturnGame(ctx context.Context, date string) (Game, error) {
 	var i Game
 	err := row.Scan(
 		&i.Date,
+		&i.CreatedAt,
 		&i.ActorID,
 		&i.ActorName,
 		&i.Film1,

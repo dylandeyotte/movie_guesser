@@ -25,7 +25,7 @@ func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) 
 	// Check if game exists
 	game, err := cfg.database.ReturnGame(r.Context(), today)
 	if !errors.Is(err, sql.ErrNoRows) && err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Error returning game, first", err)
+		respondWithError(w, http.StatusInternalServerError, "Error returning game", err)
 		return
 	}
 	if !errors.Is(err, sql.ErrNoRows) {
@@ -121,21 +121,16 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 	// Fetch game from date
 	game, err := cfg.database.ReturnGame(r.Context(), params.GameDate)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Error returning game second", err)
+		respondWithError(w, http.StatusInternalServerError, "Error returning game", err)
 		return
 	}
 
 	// Retrieve and parse player ID
-	id := r.Header.Get("X-Played-ID")
-	playerID, err := uuid.Parse(id)
+	playerIDString := r.Header.Get("X-Player-ID")
+	playerID, err := uuid.Parse(playerIDString)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error parsing UUID", err)
 		return
-	}
-
-	type Payload struct {
-		Film    string `json:"film"`
-		Verdict string `json:"verdict"`
 	}
 
 	// Check if guess matches films, create guess in database
@@ -149,6 +144,7 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Create guess in database for incorrect guess
 	payload, err := cfg.guessResponse(params.GameDate, playerID, params.Guess, false)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)

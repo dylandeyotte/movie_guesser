@@ -1,7 +1,8 @@
 -- name: CreateGame :one
-INSERT INTO game(date, actor_id, actor_name, film_1, film_2, film_3)
+INSERT INTO game(date, created_at, actor_id, actor_name, film_1, film_2, film_3)
 VALUES (
   $1,
+  NOW(),
   $2,
   $3,
   $4,

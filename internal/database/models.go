@@ -5,6 +5,8 @@
 package database
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -16,6 +18,7 @@ type Actor struct {
 
 type Game struct {
 	Date      string
+	CreatedAt time.Time
 	ActorID   int32
 	ActorName string
 	Film1     string
@@ -24,9 +27,10 @@ type Game struct {
 }
 
 type Guess struct {
-	ID       uuid.UUID
-	Date     string
-	PlayerID uuid.UUID
-	Guess    string
-	Verdict  bool
+	ID        uuid.UUID
+	CreatedAt time.Time
+	Date      string
+	PlayerID  uuid.UUID
+	Guess     string
+	Verdict   bool
 }
