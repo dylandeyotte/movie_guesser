@@ -102,6 +102,70 @@ func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) 
 	respondWithJSON(w, http.StatusOK, payload)
 }
 
+func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
+	type gameState struct {
+		Date     string                       `json:"date"`
+		Actor    string                       `json:"actor"`
+		PlayerID string                       `json:"playerid"`
+		Guesses  []database.FetchGuessListRow `json:"guesses"`
+		Strikes  int                          `json:"strikes"`
+	}
+
+	// Get todays date
+	today := time.Now().Format("2006-01-02")
+
+	// Parse player ID
+	playerIDString := r.Header.Get("X-Player-ID")
+	playerID, err := uuid.Parse(playerIDString)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error parsing UUID", err)
+		return
+	}
+	// Return Game
+	game, err := cfg.database.ReturnGame(r.Context(), today)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error returning game", err)
+		return
+	}
+	strikes, err := cfg.database.StrikeCount(r.Context(), database.StrikeCountParams{
+		Date:     today,
+		PlayerID: playerID,
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error calculating strikes", err)
+		return
+	}
+	// Fetch list of guesses
+	guesses, err := cfg.database.FetchGuessList(r.Context(), database.FetchGuessListParams{
+		Date:     today,
+		PlayerID: playerID,
+	})
+	fmt.Println(guesses)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithJSON(w, http.StatusOK, gameState{
+				Date:     game.Date,
+				Actor:    game.ActorName,
+				PlayerID: playerIDString,
+				Guesses:  guesses,
+				Strikes:  int(strikes),
+			})
+			return
+		} else {
+			respondWithError(w, http.StatusInternalServerError, "Error fetching guess list", err)
+			return
+		}
+	}
+
+	respondWithJSON(w, http.StatusOK, gameState{
+		Date:     game.Date,
+		Actor:    game.ActorName,
+		PlayerID: playerIDString,
+		Guesses:  guesses,
+		Strikes:  int(strikes),
+	})
+}
+
 func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request) {
 
 	type parameters struct {

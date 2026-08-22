@@ -77,6 +77,46 @@ func (q *Queries) FetchGuess(ctx context.Context, arg FetchGuessParams) (Guess, 
 	return i, err
 }
 
+const fetchGuessList = `-- name: FetchGuessList :many
+SELECT date, guess, verdict FROM guesses
+WHERE date = $1
+AND player_id = $2
+`
+
+type FetchGuessListParams struct {
+	Date     string
+	PlayerID uuid.UUID
+}
+
+type FetchGuessListRow struct {
+	Date    string
+	Guess   string
+	Verdict bool
+}
+
+func (q *Queries) FetchGuessList(ctx context.Context, arg FetchGuessListParams) ([]FetchGuessListRow, error) {
+	rows, err := q.db.QueryContext(ctx, fetchGuessList, arg.Date, arg.PlayerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FetchGuessListRow
+	for rows.Next() {
+		var i FetchGuessListRow
+		if err := rows.Scan(&i.Date, &i.Guess, &i.Verdict); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const strikeCount = `-- name: StrikeCount :one
 SELECT COUNT(*) FROM guesses
 WHERE date = $1
