@@ -150,6 +150,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 				Guesses:  guesses,
 				Strikes:  int(strikes),
 			})
+			fmt.Println(game.Date, game.ActorName, playerIDString, guesses, strikes)
 			return
 		} else {
 			respondWithError(w, http.StatusInternalServerError, "Error fetching guess list", err)
@@ -157,6 +158,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	fmt.Println(game.Date, game.ActorName, playerIDString, guesses, strikes)
 	respondWithJSON(w, http.StatusOK, gameState{
 		Date:     game.Date,
 		Actor:    game.ActorName,

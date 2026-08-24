@@ -33,7 +33,8 @@ export function Home() {
   const [guess, setGuess] = useState("");
   const [gameState, setGameState] = useState<gameState>();
   const [gameResponse, setgameResponse] = useState<gameResponse>();
-  const [incorrectGuess, setIncorrectGuess] = useState<string[]>([]);
+  const [incorrectGuess, setIncorrectGuess] = useState<Set<string>>(new Set());
+  const [correctGuess, setCorrectGuess] = useState<Set<string>>(new Set());
 
   const playerID = localStorage.getItem("playerID") ?? crypto.randomUUID();
 
@@ -48,7 +49,17 @@ export function Home() {
         },
       });
       const data = await response.json();
+
       setGameState(data);
+
+      if (data) {
+        for (const guess of data?.guesses) {
+          guess.Verdict === true
+            ? setCorrectGuess((prev) => new Set(prev).add(guess.Guess))
+            : setIncorrectGuess((prev) => new Set(prev).add(guess.Guess));
+          console.log(guess.Guess);
+        }
+      }
     } catch (err) {
       console.error(err);
       throw err;
@@ -86,8 +97,11 @@ export function Home() {
     });
 
     const data = await response.json();
+
     if (data.verdict == false) {
-      setIncorrectGuess([...incorrectGuess, data.guess]);
+      setIncorrectGuess(new Set(incorrectGuess).add(guess));
+    } else {
+      setCorrectGuess(new Set(correctGuess).add(guess));
     }
     setgameResponse(data);
 
@@ -103,25 +117,36 @@ export function Home() {
 
   return (
     <div>
-      <div>{info?.actor}</div>
+      <div className="actor-name">{info?.actor}</div>
+      <div className="posters">
+        <div className="poster"></div>
+        <div className="poster"></div>
+        <div className="poster"></div>
+      </div>
       <div>
         {(gameResponse && gameResponse?.strikes >= 3) || (gameState?.strikes && gameState?.strikes >= 3) ? (
           "Game over"
         ) : (
           <div>
-            <form onSubmit={submitGuess}>
+            <form className="guess-box" onSubmit={submitGuess}>
               <label>Guess</label>
               <input type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
             </form>
-            <div>{gameResponse?.verdict === true && `${gameResponse.guess}: correct`}</div>
             <div>
-              {gameState?.guesses.map((guess) => (
-                <div>guess: {guess.Guess}</div>
+              {gameState?.guesses?.map((guess) => (
+                <div>
+                  {guess.Guess}: {guess.Verdict === true ? "correct" : "incorrect"}
+                </div>
               ))}
             </div>
             <div>
-              {incorrectGuess.map((guess) => (
+              {[...incorrectGuess].map((guess) => (
                 <div>{guess}: incorrect</div>
+              ))}
+            </div>
+            <div>
+              {[...correctGuess].map((guess) => (
+                <div>{guess}: correct</div>
               ))}
             </div>
             <div>strikes: {gameResponse?.strikes ?? gameState?.strikes}</div>
