@@ -8,6 +8,7 @@ type gameInfo = {
 
 type gameResponse = {
   verdict: boolean;
+  film_number: number;
   strikes: number;
   guess: string;
   playerid: string;
@@ -32,6 +33,9 @@ type gameState = {
 export function Home() {
   const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
+  const [filmOne, setFilmOne] = useState("");
+  const [filmTwo, setFilmTwo] = useState("");
+  const [filmThree, setFilmThree] = useState("");
   const [gameState, setGameState] = useState<gameState>();
   const [gameResponse, setgameResponse] = useState<gameResponse>();
   const [incorrectGuess, setIncorrectGuess] = useState<Set<string>>(new Set());
@@ -50,6 +54,22 @@ export function Home() {
         },
       });
       const data = await response.json();
+
+      for (const guess of data.guesses) {
+        if (guess.Verdict === true) {
+          switch (guess.FilmNumber) {
+            case 1:
+              setFilmOne(guess.Guess);
+              break;
+            case 2:
+              setFilmTwo(guess.Guess);
+              break;
+            case 3:
+              setFilmThree(guess.Guess);
+              break;
+          }
+        }
+      }
 
       setGameState(data);
 
@@ -98,6 +118,19 @@ export function Home() {
     });
 
     const data = await response.json();
+    console.log(data);
+
+    switch (data.film_number) {
+      case 1:
+        setFilmOne(data.guess);
+        break;
+      case 2:
+        setFilmTwo(data.guess);
+        break;
+      case 3:
+        setFilmThree(data.guess);
+        break;
+    }
 
     if (data.verdict == false) {
       setIncorrectGuess(new Set(incorrectGuess).add(guess));
@@ -116,25 +149,29 @@ export function Home() {
     gameStatePull();
   }, []);
 
-  console.log(gameState);
-
   return (
     <div>
       <div className="actor-name">{info?.actor}</div>
       <div className="poster-container">
         <div className="poster-card">
+          <div className="poster">poster</div>
           <div className="title">
-            {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 1)?.Guess ?? "???"}
+            {/* {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 1)?.Guess ?? "???"} */}
+            {filmOne ? filmOne : "???"}
           </div>
         </div>
         <div className="poster-card">
+          <div className="poster">poster</div>
           <div className="title">
-            {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 2)?.Guess ?? "???"}
+            {/* {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 2)?.Guess ?? "???"} */}
+            {filmTwo ? filmTwo : "???"}
           </div>
         </div>
         <div className="poster-card">
+          <div className="poster">poster</div>
           <div className="title">
-            {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 3)?.Guess ?? "???"}
+            {/* {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 3)?.Guess ?? "???"} */}
+            {filmThree ? filmThree : "???"}
           </div>
         </div>
       </div>
@@ -148,19 +185,12 @@ export function Home() {
             </form>
             <div>
               {gameState?.guesses?.map((guess) => (
-                <div>
-                  {guess.Guess}: {guess.Verdict === true ? "correct" : "incorrect"}
-                </div>
+                <div>{guess.Verdict === false && `${guess.Guess}: incorrect`}</div>
               ))}
             </div>
             <div>
               {[...incorrectGuess].map((guess) => (
                 <div>{guess}: incorrect</div>
-              ))}
-            </div>
-            <div>
-              {[...correctGuess].map((guess) => (
-                <div>{guess}: correct</div>
               ))}
             </div>
             <div>strikes: {gameResponse?.strikes ?? gameState?.strikes}</div>
