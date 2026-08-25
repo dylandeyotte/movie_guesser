@@ -27,10 +27,11 @@ type Game struct {
 }
 
 type Guess struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	Date      string
-	PlayerID  uuid.UUID
-	Guess     string
-	Verdict   bool
+	ID         uuid.UUID
+	FilmNumber int32
+	CreatedAt  time.Time
+	Date       string
+	PlayerID   uuid.UUID
+	Guess      string
+	Verdict    bool
 }

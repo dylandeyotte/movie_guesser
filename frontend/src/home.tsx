@@ -16,6 +16,7 @@ type gameResponse = {
 
 type guessResponse = {
   Date: string;
+  FilmNumber: number;
   Guess: string;
   Verdict: boolean;
 };
@@ -115,13 +116,27 @@ export function Home() {
     gameStatePull();
   }, []);
 
+  console.log(gameState);
+
   return (
     <div>
       <div className="actor-name">{info?.actor}</div>
-      <div className="posters">
-        <div className="poster"></div>
-        <div className="poster"></div>
-        <div className="poster"></div>
+      <div className="poster-container">
+        <div className="poster-card">
+          <div className="title">
+            {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 1)?.Guess ?? "???"}
+          </div>
+        </div>
+        <div className="poster-card">
+          <div className="title">
+            {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 2)?.Guess ?? "???"}
+          </div>
+        </div>
+        <div className="poster-card">
+          <div className="title">
+            {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 3)?.Guess ?? "???"}
+          </div>
+        </div>
       </div>
       <div>
         {(gameResponse && gameResponse?.strikes >= 3) || (gameState?.strikes && gameState?.strikes >= 3) ? (
@@ -129,8 +144,7 @@ export function Home() {
         ) : (
           <div>
             <form className="guess-box" onSubmit={submitGuess}>
-              <label>Guess</label>
-              <input type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
+              <input className="box" type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
             </form>
             <div>
               {gameState?.guesses?.map((guess) => (

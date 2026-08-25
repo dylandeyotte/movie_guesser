@@ -12,14 +12,15 @@ import (
 )
 
 type Payload struct {
-	Verdict  bool   `json:"verdict"`
-	Strikes  int    `json:"strikes"`
-	Guess    string `json:"guess"`
-	PlayerID string `json:"playerid"`
-	Repeat   bool   `json:"repeat"`
+	Verdict    bool   `json:"verdict"`
+	FilmNumber int    `json:"film_number"`
+	Strikes    int    `json:"strikes"`
+	Guess      string `json:"guess"`
+	PlayerID   string `json:"playerid"`
+	Repeat     bool   `json:"repeat"`
 }
 
-func (cfg *apiConfig) guessResponse(date string, playerID uuid.UUID, guess string, verdict bool) (Payload, error) {
+func (cfg *apiConfig) guessResponse(date string, filmNumber int, playerID uuid.UUID, guess string, verdict bool) (Payload, error) {
 
 	// Check if guess has been guessed and return if so
 	fetchedGuess, err := cfg.database.FetchGuess(context.Background(), database.FetchGuessParams{
@@ -38,19 +39,21 @@ func (cfg *apiConfig) guessResponse(date string, playerID uuid.UUID, guess strin
 			return Payload{}, err
 		}
 		return Payload{
-			Verdict:  fetchedGuess.Verdict,
-			Strikes:  int(strikes),
-			Guess:    fetchedGuess.Guess,
-			PlayerID: uuid.UUID.String(fetchedGuess.PlayerID),
-			Repeat:   true,
+			Verdict:    fetchedGuess.Verdict,
+			FilmNumber: int(fetchedGuess.FilmNumber),
+			Strikes:    int(strikes),
+			Guess:      fetchedGuess.Guess,
+			PlayerID:   uuid.UUID.String(fetchedGuess.PlayerID),
+			Repeat:     true,
 		}, nil
 	}
 	// Create guess in database if new
 	_, err = cfg.database.CreateGuess(context.Background(), database.CreateGuessParams{
-		Date:     date,
-		PlayerID: playerID,
-		Guess:    guess,
-		Verdict:  verdict,
+		Date:       date,
+		FilmNumber: int32(filmNumber),
+		PlayerID:   playerID,
+		Guess:      guess,
+		Verdict:    verdict,
 	})
 	if err != nil {
 		return Payload{}, err
@@ -65,11 +68,12 @@ func (cfg *apiConfig) guessResponse(date string, playerID uuid.UUID, guess strin
 	}
 	// Return payload
 	return Payload{
-		Verdict:  verdict,
-		Strikes:  int(strikes),
-		Guess:    guess,
-		PlayerID: uuid.UUID.String(playerID),
-		Repeat:   false,
+		Verdict:    verdict,
+		FilmNumber: filmNumber,
+		Strikes:    int(strikes),
+		Guess:      guess,
+		PlayerID:   uuid.UUID.String(playerID),
+		Repeat:     false,
 	}, nil
 }
 

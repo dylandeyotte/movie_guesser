@@ -1,12 +1,13 @@
 -- name: CreateGuess :one
-INSERT INTO guesses(id, created_at, date, player_id, guess, verdict)
+INSERT INTO guesses(id, film_number, created_at, date, player_id, guess, verdict)
 VALUES (
   gen_random_UUID(),
-  NOW(),
   $1,
+  NOW(),
   $2,
   $3,
-  $4
+  $4,
+  $5
 )
 RETURNING *;
 
@@ -17,7 +18,7 @@ AND player_id = $2
 AND guess = $3;
 
 -- name: FetchGuessList :many
-SELECT date, guess, verdict FROM guesses
+SELECT date, film_number, guess, verdict FROM guesses
 WHERE date = $1
 AND player_id = $2;
 

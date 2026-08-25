@@ -12,27 +12,30 @@ import (
 )
 
 const createGuess = `-- name: CreateGuess :one
-INSERT INTO guesses(id, created_at, date, player_id, guess, verdict)
+INSERT INTO guesses(id, film_number, created_at, date, player_id, guess, verdict)
 VALUES (
   gen_random_UUID(),
-  NOW(),
   $1,
+  NOW(),
   $2,
   $3,
-  $4
+  $4,
+  $5
 )
-RETURNING id, created_at, date, player_id, guess, verdict
+RETURNING id, film_number, created_at, date, player_id, guess, verdict
 `
 
 type CreateGuessParams struct {
-	Date     string
-	PlayerID uuid.UUID
-	Guess    string
-	Verdict  bool
+	FilmNumber int32
+	Date       string
+	PlayerID   uuid.UUID
+	Guess      string
+	Verdict    bool
 }
 
 func (q *Queries) CreateGuess(ctx context.Context, arg CreateGuessParams) (Guess, error) {
 	row := q.db.QueryRowContext(ctx, createGuess,
+		arg.FilmNumber,
 		arg.Date,
 		arg.PlayerID,
 		arg.Guess,
@@ -41,6 +44,7 @@ func (q *Queries) CreateGuess(ctx context.Context, arg CreateGuessParams) (Guess
 	var i Guess
 	err := row.Scan(
 		&i.ID,
+		&i.FilmNumber,
 		&i.CreatedAt,
 		&i.Date,
 		&i.PlayerID,
@@ -51,7 +55,7 @@ func (q *Queries) CreateGuess(ctx context.Context, arg CreateGuessParams) (Guess
 }
 
 const fetchGuess = `-- name: FetchGuess :one
-SELECT id, created_at, date, player_id, guess, verdict FROM guesses
+SELECT id, film_number, created_at, date, player_id, guess, verdict FROM guesses
 WHERE date = $1
 AND player_id = $2
 AND guess = $3
@@ -68,6 +72,7 @@ func (q *Queries) FetchGuess(ctx context.Context, arg FetchGuessParams) (Guess, 
 	var i Guess
 	err := row.Scan(
 		&i.ID,
+		&i.FilmNumber,
 		&i.CreatedAt,
 		&i.Date,
 		&i.PlayerID,
@@ -78,7 +83,7 @@ func (q *Queries) FetchGuess(ctx context.Context, arg FetchGuessParams) (Guess, 
 }
 
 const fetchGuessList = `-- name: FetchGuessList :many
-SELECT date, guess, verdict FROM guesses
+SELECT date, film_number, guess, verdict FROM guesses
 WHERE date = $1
 AND player_id = $2
 `
@@ -89,9 +94,10 @@ type FetchGuessListParams struct {
 }
 
 type FetchGuessListRow struct {
-	Date    string
-	Guess   string
-	Verdict bool
+	Date       string
+	FilmNumber int32
+	Guess      string
+	Verdict    bool
 }
 
 func (q *Queries) FetchGuessList(ctx context.Context, arg FetchGuessListParams) ([]FetchGuessListRow, error) {
@@ -103,7 +109,12 @@ func (q *Queries) FetchGuessList(ctx context.Context, arg FetchGuessListParams) 
 	var items []FetchGuessListRow
 	for rows.Next() {
 		var i FetchGuessListRow
-		if err := rows.Scan(&i.Date, &i.Guess, &i.Verdict); err != nil {
+		if err := rows.Scan(
+			&i.Date,
+			&i.FilmNumber,
+			&i.Guess,
+			&i.Verdict,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
