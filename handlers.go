@@ -76,6 +76,8 @@ func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	fmt.Println(AD.Results[0])
+
 	// Create Game
 	game, err = cfg.database.CreateGame(r.Context(), database.CreateGameParams{
 		Date:      today,

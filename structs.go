@@ -11,7 +11,7 @@ type ActorData struct {
 		OriginalName       string       `json:"original_name"`
 		Popularity         float64      `json:"popularity"`
 		ProfilePath        string       `json:"profile_path"`
-		KnownFor           []KnownFilms `json:"known_films"`
+		KnownFor           []KnownFilms `json:"known_for"`
 	} `json:"results"`
 	TotalPages   int `json:"total_pages"`
 	TotalResults int `json:"total_results"`
