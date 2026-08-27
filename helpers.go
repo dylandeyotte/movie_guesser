@@ -20,6 +20,49 @@ type Payload struct {
 	Repeat     bool   `json:"repeat"`
 }
 
+func (cfg *apiConfig) enterFilm(movieID int, errCh chan error) {
+	// Create client
+	client := &http.Client{}
+
+	// Assemble URL
+	url := fmt.Sprintf("https://api.themoviedb.org/3/movie/%v", movieID)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		errCh <- err
+		return
+	}
+	// Set header token
+	req.Header.Set("Authorization", cfg.tmdbToken)
+
+	// HTTP Request
+	resp, err := client.Do(req)
+	if err != nil {
+		errCh <- err
+		return
+	}
+	defer resp.Body.Close()
+
+	var FD FilmData
+
+	// Decode JSON
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(&FD); err != nil {
+		errCh <- err
+		return
+	}
+	// Enter film in database
+	if err := cfg.database.CreateFilm(context.Background(), database.CreateFilmParams{
+		ID:         int32(FD.ID),
+		Title:      FD.Title,
+		PosterPath: FD.PosterPath,
+	}); err != nil {
+		errCh <- err
+		return
+	}
+
+}
+
 func (cfg *apiConfig) guessResponse(date string, filmNumber int, playerID uuid.UUID, guess string, verdict bool) (Payload, error) {
 
 	// Check if guess has been guessed and return if so

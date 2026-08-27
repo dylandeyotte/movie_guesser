@@ -10,7 +10,7 @@ import (
 )
 
 const createGame = `-- name: CreateGame :one
-INSERT INTO game(date, created_at, actor_id, actor_name, film_1, film_2, film_3)
+INSERT INTO game(date, created_at, actor_id, actor_name, film_1, film_2, film_3, film_1_id, film_2_id, film_3_id)
 VALUES (
   $1,
   NOW(),
@@ -18,9 +18,12 @@ VALUES (
   $3,
   $4,
   $5,
-  $6
+  $6,
+  $7,
+  $8,
+  $9
 )
-RETURNING date, created_at, actor_id, actor_name, film_1, film_2, film_3
+RETURNING date, created_at, actor_id, actor_name, film_1, film_2, film_3, film_1_id, film_2_id, film_3_id
 `
 
 type CreateGameParams struct {
@@ -30,6 +33,9 @@ type CreateGameParams struct {
 	Film1     string
 	Film2     string
 	Film3     string
+	Film1ID   int32
+	Film2ID   int32
+	Film3ID   int32
 }
 
 func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (Game, error) {
@@ -40,6 +46,9 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (Game, e
 		arg.Film1,
 		arg.Film2,
 		arg.Film3,
+		arg.Film1ID,
+		arg.Film2ID,
+		arg.Film3ID,
 	)
 	var i Game
 	err := row.Scan(
@@ -50,12 +59,15 @@ func (q *Queries) CreateGame(ctx context.Context, arg CreateGameParams) (Game, e
 		&i.Film1,
 		&i.Film2,
 		&i.Film3,
+		&i.Film1ID,
+		&i.Film2ID,
+		&i.Film3ID,
 	)
 	return i, err
 }
 
 const returnGame = `-- name: ReturnGame :one
-SELECT date, created_at, actor_id, actor_name, film_1, film_2, film_3 FROM game
+SELECT date, created_at, actor_id, actor_name, film_1, film_2, film_3, film_1_id, film_2_id, film_3_id FROM game
 WHERE date = $1
 `
 
@@ -70,6 +82,9 @@ func (q *Queries) ReturnGame(ctx context.Context, date string) (Game, error) {
 		&i.Film1,
 		&i.Film2,
 		&i.Film3,
+		&i.Film1ID,
+		&i.Film2ID,
+		&i.Film3ID,
 	)
 	return i, err
 }

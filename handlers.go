@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"GitHub.com/dylandeyotte/movie_guesser/internal/database"
@@ -83,10 +84,42 @@ func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) 
 		Film1:     AD.Results[0].KnownFor[0].Title,
 		Film2:     AD.Results[0].KnownFor[1].Title,
 		Film3:     AD.Results[0].KnownFor[2].Title,
+		Film1ID:   int32(AD.Results[0].KnownFor[0].ID),
+		Film2ID:   int32(AD.Results[0].KnownFor[1].ID),
+		Film3ID:   int32(AD.Results[0].KnownFor[2].ID),
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Game creation failed", err)
 		return
+	}
+
+	// Create wait group and error chan
+	var wait sync.WaitGroup
+	errChan := make(chan error, len(AD.Results[0].KnownFor))
+
+	// Loop through films and enter them in database
+	for _, film := range AD.Results[0].KnownFor {
+		wait.Add(1)
+
+		go func(film KnownFilms) {
+
+			defer wait.Done()
+
+			cfg.enterFilm(film.ID, errChan)
+
+		}(film)
+	}
+
+	// Close chan and wait group
+	wait.Wait()
+	close(errChan)
+
+	// Loop through chan for errors
+	for err := range errChan {
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Error creating film in database", err)
+			return
+		}
 	}
 
 	// if err := cfg.database.MarkActor(r.Context(), actor.Name); err != nil {
@@ -109,6 +142,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		PlayerID string                       `json:"playerid"`
 		Guesses  []database.FetchGuessListRow `json:"guesses"`
 		Strikes  int                          `json:"strikes"`
+		Posters  []string                     `json:"posters"`
 	}
 
 	// Get todays date
@@ -127,6 +161,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Error returning game", err)
 		return
 	}
+	// Calculate strikes
 	strikes, err := cfg.database.StrikeCount(r.Context(), database.StrikeCountParams{
 		Date:     today,
 		PlayerID: playerID,
@@ -135,13 +170,24 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Error calculating strikes", err)
 		return
 	}
+	// Retrieve poster paths from ID
+	filmIDList := []int{int(game.Film1ID), int(game.Film2ID), int(game.Film3ID)}
+	posterPaths := []string{}
+
+	for _, filmID := range filmIDList {
+		path, err := cfg.database.FetchPosters(r.Context(), int32(filmID))
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Error fetching poster paths", err)
+			return
+		}
+		posterPaths = append(posterPaths, path)
+	}
+
 	// Fetch list of guesses
 	guesses, err := cfg.database.FetchGuessList(r.Context(), database.FetchGuessListParams{
 		Date:     today,
 		PlayerID: playerID,
 	})
-
-	fmt.Println(guesses)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			respondWithJSON(w, http.StatusOK, gameState{
@@ -150,6 +196,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 				PlayerID: playerIDString,
 				Guesses:  guesses,
 				Strikes:  int(strikes),
+				Posters:  posterPaths,
 			})
 			fmt.Println(game.Date, game.ActorName, playerIDString, guesses, strikes)
 			return
@@ -166,6 +213,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		PlayerID: playerIDString,
 		Guesses:  guesses,
 		Strikes:  int(strikes),
+		Posters:  posterPaths,
 	})
 }
 

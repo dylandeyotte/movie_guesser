@@ -28,6 +28,7 @@ type gameState = {
   playerid: string;
   guesses: guessResponse[];
   strikes: number;
+  posters: string[];
 };
 
 export function Home() {
@@ -155,24 +156,15 @@ export function Home() {
       <div className="poster-container">
         <div className="poster-card">
           <div className="poster">poster</div>
-          <div className="title">
-            {/* {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 1)?.Guess ?? "???"} */}
-            {filmOne ? filmOne : "???"}
-          </div>
+          <div className="title">{filmOne ? filmOne : "???"}</div>
         </div>
         <div className="poster-card">
           <div className="poster">poster</div>
-          <div className="title">
-            {/* {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 2)?.Guess ?? "???"} */}
-            {filmTwo ? filmTwo : "???"}
-          </div>
+          <div className="title">{filmTwo ? filmTwo : "???"}</div>
         </div>
         <div className="poster-card">
           <div className="poster">poster</div>
-          <div className="title">
-            {/* {gameState?.guesses?.find((guess) => guess.Verdict === true && guess.FilmNumber === 3)?.Guess ?? "???"} */}
-            {filmThree ? filmThree : "???"}
-          </div>
+          <div className="title">{filmThree ? filmThree : "???"}</div>
         </div>
       </div>
       <div>

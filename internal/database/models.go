@@ -16,6 +16,12 @@ type Actor struct {
 	Used bool
 }
 
+type Film struct {
+	ID         int32
+	Title      string
+	PosterPath string
+}
+
 type Game struct {
 	Date      string
 	CreatedAt time.Time
@@ -24,6 +30,9 @@ type Game struct {
 	Film1     string
 	Film2     string
 	Film3     string
+	Film1ID   int32
+	Film2ID   int32
+	Film3ID   int32
 }
 
 type Guess struct {
