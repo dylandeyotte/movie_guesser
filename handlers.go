@@ -76,8 +76,6 @@ func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	fmt.Println(AD.Results[0])
-
 	// Create Game
 	game, err = cfg.database.CreateGame(r.Context(), database.CreateGameParams{
 		Date:      today,
@@ -174,15 +172,11 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 	}
 	// Retrieve poster paths from ID
 	filmIDList := []int{int(game.Film1ID), int(game.Film2ID), int(game.Film3ID)}
-	posterPaths := []string{}
 
-	for _, filmID := range filmIDList {
-		path, err := cfg.database.FetchPosters(r.Context(), int32(filmID))
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Error fetching poster paths", err)
-			return
-		}
-		posterPaths = append(posterPaths, path)
+	posterPaths, err := cfg.fetchPosterPaths(filmIDList)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error fetching poster paths", err)
+		return
 	}
 
 	// Fetch list of guesses
@@ -200,7 +194,6 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 				Strikes:  int(strikes),
 				Posters:  posterPaths,
 			})
-			fmt.Println(game.Date, game.ActorName, playerIDString, guesses, strikes)
 			return
 		} else {
 			respondWithError(w, http.StatusInternalServerError, "Error fetching guess list", err)
@@ -208,7 +201,6 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println(game.Date, game.ActorName, playerIDString, guesses, strikes)
 	respondWithJSON(w, http.StatusOK, gameState{
 		Date:     game.Date,
 		Actor:    game.ActorName,
@@ -252,7 +244,7 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 
 	// Check if guess matches films, create guess in database
 	if strings.EqualFold(params.Guess, game.Film1) {
-		payload, err := cfg.guessResponse(params.GameDate, 1, playerID, params.Guess, true)
+		payload, err := cfg.guessResponse(params.GameDate, 1, int(game.Film1ID), playerID, params.Guess, true)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)
 			return
@@ -262,7 +254,7 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 	}
 
 	if strings.EqualFold(params.Guess, game.Film2) {
-		payload, err := cfg.guessResponse(params.GameDate, 2, playerID, params.Guess, true)
+		payload, err := cfg.guessResponse(params.GameDate, 2, int(game.Film2ID), playerID, params.Guess, true)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)
 			return
@@ -272,7 +264,7 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 	}
 
 	if strings.EqualFold(params.Guess, game.Film3) {
-		payload, err := cfg.guessResponse(params.GameDate, 3, playerID, params.Guess, true)
+		payload, err := cfg.guessResponse(params.GameDate, 3, int(game.Film3ID), playerID, params.Guess, true)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)
 			return
@@ -282,7 +274,7 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Create guess in database for incorrect guess
-	payload, err := cfg.guessResponse(params.GameDate, 0, playerID, params.Guess, false)
+	payload, err := cfg.guessResponse(params.GameDate, 0, 0, playerID, params.Guess, false)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)
 		return

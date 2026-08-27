@@ -12,12 +12,26 @@ import (
 )
 
 type Payload struct {
-	Verdict    bool   `json:"verdict"`
-	FilmNumber int    `json:"film_number"`
-	Strikes    int    `json:"strikes"`
-	Guess      string `json:"guess"`
-	PlayerID   string `json:"playerid"`
-	Repeat     bool   `json:"repeat"`
+	Verdict    bool     `json:"verdict"`
+	FilmNumber int      `json:"film_number"`
+	Strikes    int      `json:"strikes"`
+	Guess      string   `json:"guess"`
+	PlayerID   string   `json:"playerid"`
+	Repeat     bool     `json:"repeat"`
+	PosterPath []string `json:"poster_path"`
+}
+
+func (cfg *apiConfig) fetchPosterPaths(filmIDList []int) ([]string, error) {
+	posterPaths := []string{}
+
+	for _, filmID := range filmIDList {
+		path, err := cfg.database.FetchPosters(context.Background(), int32(filmID))
+		if err != nil {
+			return []string{}, err
+		}
+		posterPaths = append(posterPaths, path)
+	}
+	return posterPaths, nil
 }
 
 func (cfg *apiConfig) enterFilm(movieID int, errCh chan error) {
@@ -63,8 +77,17 @@ func (cfg *apiConfig) enterFilm(movieID int, errCh chan error) {
 
 }
 
-func (cfg *apiConfig) guessResponse(date string, filmNumber int, playerID uuid.UUID, guess string, verdict bool) (Payload, error) {
-
+func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerID uuid.UUID, guess string, verdict bool) (Payload, error) {
+	// If guess is correct, fetch poster path
+	posterPath := []string{}
+	if verdict == true {
+		poster, err := cfg.fetchPosterPaths([]int{filmID})
+		posterPath = append(posterPath, poster[0])
+		if err != nil {
+			fmt.Println(err)
+			return Payload{}, err
+		}
+	}
 	// Check if guess has been guessed and return if so
 	fetchedGuess, err := cfg.database.FetchGuess(context.Background(), database.FetchGuessParams{
 		Date:     date,
@@ -79,6 +102,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber int, playerID uuid.U
 			PlayerID: playerID,
 		})
 		if err != nil {
+			fmt.Println(err)
 			return Payload{}, err
 		}
 		return Payload{
@@ -88,6 +112,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber int, playerID uuid.U
 			Guess:      fetchedGuess.Guess,
 			PlayerID:   uuid.UUID.String(fetchedGuess.PlayerID),
 			Repeat:     true,
+			PosterPath: posterPath,
 		}, nil
 	}
 	// Create guess in database if new
@@ -99,6 +124,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber int, playerID uuid.U
 		Verdict:    verdict,
 	})
 	if err != nil {
+		fmt.Println(err)
 		return Payload{}, err
 	}
 	// Calculate strike count
@@ -107,6 +133,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber int, playerID uuid.U
 		PlayerID: playerID,
 	})
 	if err != nil {
+		fmt.Println(err)
 		return Payload{}, err
 	}
 	// Return payload
@@ -117,6 +144,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber int, playerID uuid.U
 		Guess:      guess,
 		PlayerID:   uuid.UUID.String(playerID),
 		Repeat:     false,
+		PosterPath: posterPath,
 	}, nil
 }
 

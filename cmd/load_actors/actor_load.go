@@ -73,7 +73,7 @@ func main() {
 
 	client := &http.Client{}
 
-	url := "https://api.themoviedb.org/3/person/popular?page=44"
+	url := "https://api.themoviedb.org/3/person/popular?page=69"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

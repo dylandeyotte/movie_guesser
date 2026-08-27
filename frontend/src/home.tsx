@@ -6,16 +6,17 @@ type gameInfo = {
   gamedate: string;
 };
 
-type gameResponse = {
+type guessResponse = {
   verdict: boolean;
   film_number: number;
   strikes: number;
   guess: string;
   playerid: string;
   repeat: boolean;
+  poster_path: string[];
 };
 
-type guessResponse = {
+type guessInfo = {
   Date: string;
   FilmNumber: number;
   Guess: string;
@@ -26,7 +27,7 @@ type gameState = {
   date: string;
   actor: string;
   playerid: string;
-  guesses: guessResponse[];
+  guesses: guessInfo[];
   strikes: number;
   posters: string[];
 };
@@ -37,8 +38,11 @@ export function Home() {
   const [filmOne, setFilmOne] = useState("");
   const [filmTwo, setFilmTwo] = useState("");
   const [filmThree, setFilmThree] = useState("");
+  const [filmOnePoster, setFilmOnePoster] = useState("");
+  const [filmTwoPoster, setFilmTwoPoster] = useState("");
+  const [filmThreePoster, setFilmThreePoster] = useState("");
   const [gameState, setGameState] = useState<gameState>();
-  const [gameResponse, setgameResponse] = useState<gameResponse>();
+  const [gameResponse, setgameResponse] = useState<guessResponse>();
   const [incorrectGuess, setIncorrectGuess] = useState<Set<string>>(new Set());
   const [correctGuess, setCorrectGuess] = useState<Set<string>>(new Set());
 
@@ -61,12 +65,15 @@ export function Home() {
           switch (guess.FilmNumber) {
             case 1:
               setFilmOne(guess.Guess);
+              setFilmOnePoster(`https://image.tmdb.org/t/p/w500${data.posters[0]}`);
               break;
             case 2:
               setFilmTwo(guess.Guess);
+              setFilmTwoPoster(`https://image.tmdb.org/t/p/w500${data.posters[1]}`);
               break;
             case 3:
               setFilmThree(guess.Guess);
+              setFilmThreePoster(`https://image.tmdb.org/t/p/w500${data.posters[2]}`);
               break;
           }
         }
@@ -124,12 +131,15 @@ export function Home() {
     switch (data.film_number) {
       case 1:
         setFilmOne(data.guess);
+        setFilmOnePoster(`https://image.tmdb.org/t/p/w500${data.poster_path[0]}`);
         break;
       case 2:
         setFilmTwo(data.guess);
+        setFilmTwoPoster(`https://image.tmdb.org/t/p/w500${data.poster_path[0]}`);
         break;
       case 3:
         setFilmThree(data.guess);
+        setFilmThreePoster(`https://image.tmdb.org/t/p/w500${data.poster_path[0]}`);
         break;
     }
 
@@ -150,20 +160,31 @@ export function Home() {
     gameStatePull();
   }, []);
 
+  console.log(gameState);
+
   return (
     <div>
       <div className="actor-name">{info?.actor}</div>
       <div className="poster-container">
         <div className="poster-card">
-          <div className="poster">poster</div>
+          <div className="poster">
+            poster
+            <img src={filmOnePoster} />
+          </div>
           <div className="title">{filmOne ? filmOne : "???"}</div>
         </div>
         <div className="poster-card">
-          <div className="poster">poster</div>
+          <div className="poster">
+            poster
+            <img src={filmTwoPoster} />
+          </div>
           <div className="title">{filmTwo ? filmTwo : "???"}</div>
         </div>
         <div className="poster-card">
-          <div className="poster">poster</div>
+          <div className="poster">
+            poster
+            <img src={filmThreePoster} />
+          </div>
           <div className="title">{filmThree ? filmThree : "???"}</div>
         </div>
       </div>
