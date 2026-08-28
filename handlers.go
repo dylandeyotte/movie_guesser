@@ -143,6 +143,8 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		Guesses  []database.FetchGuessListRow `json:"guesses"`
 		Strikes  int                          `json:"strikes"`
 		Posters  []string                     `json:"posters"`
+		GameOver bool                         `json:"game_over"`
+		Answers  FilmAnswers                  `json:"answers,omitempty"`
 	}
 
 	// Get todays date
@@ -179,6 +181,12 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	answers, err := cfg.answerReveal(int(strikes), game)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error gathering answers", err)
+		return
+	}
+
 	// Fetch list of guesses
 	guesses, err := cfg.database.FetchGuessList(r.Context(), database.FetchGuessListParams{
 		Date:     today,
@@ -193,6 +201,8 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 				Guesses:  guesses,
 				Strikes:  int(strikes),
 				Posters:  posterPaths,
+				GameOver: gameOverCheck(int(strikes)),
+				Answers:  answers,
 			})
 			return
 		} else {
@@ -208,6 +218,8 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		Guesses:  guesses,
 		Strikes:  int(strikes),
 		Posters:  posterPaths,
+		GameOver: gameOverCheck(int(strikes)),
+		Answers:  answers,
 	})
 }
 

@@ -85,3 +85,12 @@ type FilmData struct {
 	VoteAverage float64 `json:"vote_average"`
 	VoteCount   int     `json:"vote_count"`
 }
+
+type FilmAnswers struct {
+	Film1       string `json:"film1"`
+	Film1Poster string `json:"film1_poster"`
+	Film2       string `json:"film2"`
+	Film2Poster string `json:"film2_poster"`
+	Film3       string `json:"film3"`
+	Film3Poster string `json:"film3_poster"`
+}

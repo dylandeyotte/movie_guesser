@@ -6,6 +6,15 @@ type gameInfo = {
   gamedate: string;
 };
 
+type FilmAnswers = {
+  film1: string;
+  film1_poster: string;
+  film2: string;
+  film2_poster: string;
+  film3: string;
+  film3_poster: string;
+};
+
 type guessResponse = {
   verdict: boolean;
   film_number: number;
@@ -30,11 +39,14 @@ type gameState = {
   guesses: guessInfo[];
   strikes: number;
   posters: string[];
+  game_over: boolean;
+  answers: FilmAnswers;
 };
 
 export function Home() {
   const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
+  const [gameOver, setGameOver] = useState(Boolean);
   const [filmOne, setFilmOne] = useState("");
   const [filmTwo, setFilmTwo] = useState("");
   const [filmThree, setFilmThree] = useState("");
@@ -50,6 +62,16 @@ export function Home() {
 
   localStorage.setItem("playerID", playerID);
 
+  function gameOverReveal(films: string[], paths: string[]) {
+    setFilmOne(films[0]);
+    setFilmTwo(films[1]);
+    setFilmThree(films[2]);
+    setFilmOnePoster(`https://image.tmdb.org/t/p/w500${paths[0]}`);
+    setFilmTwoPoster(`https://image.tmdb.org/t/p/w500${paths[1]}`);
+    setFilmThreePoster(`https://image.tmdb.org/t/p/w500${paths[2]}`);
+    console.log(films, paths);
+  }
+
   async function gameStatePull() {
     try {
       const response = await fetch("http://localhost:8080/api/gamestate", {
@@ -59,6 +81,14 @@ export function Home() {
         },
       });
       const data = await response.json();
+
+      if (data.game_over === true) {
+        setGameOver(true);
+        gameOverReveal(
+          [data.answers.film1, data.answers.film2, data.answers.film3],
+          [data.answers.film1_poster, data.answers.film2_poster, data.answers.film3_poster],
+        );
+      }
 
       for (const guess of data.guesses) {
         if (guess.Verdict === true) {
@@ -126,7 +156,10 @@ export function Home() {
     });
 
     const data = await response.json();
-    console.log(data);
+
+    if (data.strikes >= 3) {
+      await gameStatePull();
+    }
 
     switch (data.film_number) {
       case 1:
@@ -160,36 +193,31 @@ export function Home() {
     gameStatePull();
   }, []);
 
-  console.log(gameState);
-
   return (
     <div>
       <div className="actor-name">{info?.actor}</div>
       <div className="poster-container">
         <div className="poster-card">
           <div className="poster">
-            poster
-            <img src={filmOnePoster} />
+            <img src={filmOnePoster} className="poster-img" />
           </div>
           <div className="title">{filmOne ? filmOne : "???"}</div>
         </div>
         <div className="poster-card">
           <div className="poster">
-            poster
-            <img src={filmTwoPoster} />
+            <img src={filmTwoPoster} className="poster-img" />
           </div>
           <div className="title">{filmTwo ? filmTwo : "???"}</div>
         </div>
         <div className="poster-card">
           <div className="poster">
-            poster
-            <img src={filmThreePoster} />
+            <img src={filmThreePoster} className="poster-img" />
           </div>
           <div className="title">{filmThree ? filmThree : "???"}</div>
         </div>
       </div>
       <div>
-        {(gameResponse && gameResponse?.strikes >= 3) || (gameState?.strikes && gameState?.strikes >= 3) ? (
+        {gameOver ? (
           "Game over"
         ) : (
           <div>

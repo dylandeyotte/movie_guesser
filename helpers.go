@@ -21,6 +21,28 @@ type Payload struct {
 	PosterPath []string `json:"poster_path"`
 }
 
+func (cfg *apiConfig) answerReveal(strikes int, game database.Game) (FilmAnswers, error) {
+	if strikes < 3 {
+		return FilmAnswers{}, nil
+	}
+	paths, err := cfg.fetchPosterPaths([]int{int(game.Film1ID), int(game.Film2ID), int(game.Film3ID)})
+	if err != nil {
+		return FilmAnswers{}, err
+	}
+	return FilmAnswers{
+		game.Film1,
+		paths[0],
+		game.Film2,
+		paths[1],
+		game.Film3,
+		paths[2],
+	}, nil
+}
+
+func gameOverCheck(strikes int) bool {
+	return strikes >= 3
+}
+
 func (cfg *apiConfig) fetchPosterPaths(filmIDList []int) ([]string, error) {
 	posterPaths := []string{}
 

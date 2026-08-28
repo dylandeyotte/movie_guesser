@@ -18,15 +18,35 @@
 }
 
 .poster {
-  width: 200px;
-  height: 400px;
+  width: 333px;
+  height: 500px;
   border-color: black;
   border-style: solid;
 }
 
+.poster.correct {
+  border-color: green;
+}
+
+.poster.failed {
+  border-color: red;
+}
+
+.poster-img {
+  width: 333px;
+  height: 500px;
+}
+
 .title {
+  display: flex;
+  flex-direction: column;
   margin-top: -50px;
   justify-content: center;
+}
+
+.fail {
+  font-size: xx-large;
+  color: red;
 }
 
 .guess-box {
