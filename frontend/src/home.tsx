@@ -6,6 +6,12 @@ type gameInfo = {
   gamedate: string;
 };
 
+type filmCard = {
+  title: string;
+  poster: string;
+  status: "hidden" | "correct" | "failed";
+};
+
 type FilmAnswers = {
   film1: string;
   film1_poster: string;
@@ -47,12 +53,9 @@ export function Home() {
   const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
   const [gameOver, setGameOver] = useState(Boolean);
-  const [filmOne, setFilmOne] = useState("");
-  const [filmTwo, setFilmTwo] = useState("");
-  const [filmThree, setFilmThree] = useState("");
-  const [filmOnePoster, setFilmOnePoster] = useState("");
-  const [filmTwoPoster, setFilmTwoPoster] = useState("");
-  const [filmThreePoster, setFilmThreePoster] = useState("");
+  const [filmOne, setFilmOne] = useState<filmCard>();
+  const [filmTwo, setFilmTwo] = useState<filmCard>();
+  const [filmThree, setFilmThree] = useState<filmCard>();
   const [gameState, setGameState] = useState<gameState>();
   const [gameResponse, setgameResponse] = useState<guessResponse>();
   const [incorrectGuess, setIncorrectGuess] = useState<Set<string>>(new Set());
@@ -63,12 +66,22 @@ export function Home() {
   localStorage.setItem("playerID", playerID);
 
   function gameOverReveal(films: string[], paths: string[]) {
-    setFilmOne(films[0]);
-    setFilmTwo(films[1]);
-    setFilmThree(films[2]);
-    setFilmOnePoster(`https://image.tmdb.org/t/p/w500${paths[0]}`);
-    setFilmTwoPoster(`https://image.tmdb.org/t/p/w500${paths[1]}`);
-    setFilmThreePoster(`https://image.tmdb.org/t/p/w500${paths[2]}`);
+    setFilmOne({
+      title: films[0],
+      poster: `https://image.tmdb.org/t/p/w500${paths[0]}`,
+      status: "failed",
+    });
+    setFilmTwo({
+      title: films[1],
+      poster: `https://image.tmdb.org/t/p/w500${paths[1]}`,
+      status: "failed",
+    });
+    setFilmThree({
+      title: films[2],
+      poster: `https://image.tmdb.org/t/p/w500${paths[2]}`,
+      status: "failed",
+    });
+
     console.log(films, paths);
   }
 
@@ -94,16 +107,25 @@ export function Home() {
         if (guess.Verdict === true) {
           switch (guess.FilmNumber) {
             case 1:
-              setFilmOne(guess.Guess);
-              setFilmOnePoster(`https://image.tmdb.org/t/p/w500${data.posters[0]}`);
+              setFilmOne({
+                title: guess.Guess,
+                poster: `https://image.tmdb.org/t/p/w500${data.posters[0]}`,
+                status: "correct",
+              });
               break;
             case 2:
-              setFilmTwo(guess.Guess);
-              setFilmTwoPoster(`https://image.tmdb.org/t/p/w500${data.posters[1]}`);
+              setFilmTwo({
+                title: guess.Guess,
+                poster: `https://image.tmdb.org/t/p/w500${data.posters[1]}`,
+                status: "correct",
+              });
               break;
             case 3:
-              setFilmThree(guess.Guess);
-              setFilmThreePoster(`https://image.tmdb.org/t/p/w500${data.posters[2]}`);
+              setFilmThree({
+                title: guess.Guess,
+                poster: `https://image.tmdb.org/t/p/w500${data.posters[2]}`,
+                status: "correct",
+              });
               break;
           }
         }
@@ -163,16 +185,25 @@ export function Home() {
 
     switch (data.film_number) {
       case 1:
-        setFilmOne(data.guess);
-        setFilmOnePoster(`https://image.tmdb.org/t/p/w500${data.poster_path[0]}`);
+        setFilmOne({
+          title: data.guess,
+          poster: `https://image.tmdb.org/t/p/w500${data.poster_path[0]}`,
+          status: data.verdict === true ? "correct" : "hidden",
+        });
         break;
       case 2:
-        setFilmTwo(data.guess);
-        setFilmTwoPoster(`https://image.tmdb.org/t/p/w500${data.poster_path[0]}`);
+        setFilmTwo({
+          title: data.guess,
+          poster: `https://image.tmdb.org/t/p/w500${data.poster_path[0]}`,
+          status: data.verdict === true ? "correct" : "hidden",
+        });
         break;
       case 3:
-        setFilmThree(data.guess);
-        setFilmThreePoster(`https://image.tmdb.org/t/p/w500${data.poster_path[0]}`);
+        setFilmThree({
+          title: data.guess,
+          poster: `https://image.tmdb.org/t/p/w500${data.poster_path[0]}`,
+          status: data.verdict === true ? "correct" : "hidden",
+        });
         break;
     }
 
@@ -198,22 +229,22 @@ export function Home() {
       <div className="actor-name">{info?.actor}</div>
       <div className="poster-container">
         <div className="poster-card">
-          <div className="poster">
-            <img src={filmOnePoster} className="poster-img" />
+          <div className={`poster ${filmOne?.status}`}>
+            <img src={filmOne?.poster} className="poster-img" />
           </div>
-          <div className="title">{filmOne ? filmOne : "???"}</div>
+          <div className="title">{filmOne?.title ? filmOne.title : "???"}</div>
         </div>
         <div className="poster-card">
-          <div className="poster">
-            <img src={filmTwoPoster} className="poster-img" />
+          <div className={`poster ${filmTwo?.status}`}>
+            <img src={filmTwo?.poster} className="poster-img" />
           </div>
-          <div className="title">{filmTwo ? filmTwo : "???"}</div>
+          <div className="title">{filmTwo?.title ? filmTwo.title : "???"}</div>
         </div>
         <div className="poster-card">
-          <div className="poster">
-            <img src={filmThreePoster} className="poster-img" />
+          <div className={`poster ${filmThree?.status}`}>
+            <img src={filmThree?.poster} className="poster-img" />
           </div>
-          <div className="title">{filmThree ? filmThree : "???"}</div>
+          <div className="title">{filmThree?.title ? filmThree.title : "???"}</div>
         </div>
       </div>
       <div>
