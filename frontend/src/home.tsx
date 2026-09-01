@@ -3,10 +3,15 @@ import { useEffect } from "react";
 
 import type { status, gameInfo, filmCard, guessResponse, gameState } from "./helpers";
 
+type gameEnd = {
+  victory: boolean;
+  defeat: boolean;
+};
+
 export function Home() {
   const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
-  const [gameOver, setGameOver] = useState(Boolean);
+  const [gameEnd, setGameEnd] = useState<gameEnd>();
   const [filmOne, setFilmOne] = useState<filmCard>();
   const [filmTwo, setFilmTwo] = useState<filmCard>();
   const [filmThree, setFilmThree] = useState<filmCard>();
@@ -55,7 +60,10 @@ export function Home() {
       const data = await response.json();
 
       if (data.game_over === true) {
-        setGameOver(true);
+        setGameEnd({
+          victory: false,
+          defeat: true,
+        });
         setFilmHelper(data.answers.film1, data.answers.film1_poster, "failed", 1);
         setFilmHelper(data.answers.film2, data.answers.film2_poster, "failed", 2);
         setFilmHelper(data.answers.film3, data.answers.film3_poster, "failed", 3);
@@ -76,7 +84,7 @@ export function Home() {
           }
         }
       }
-      console.log(data.posters);
+      console.log(data.strikes);
 
       setGameState(data);
 
@@ -145,6 +153,7 @@ export function Home() {
       setIncorrectGuess(new Set(incorrectGuess).add(guess));
     }
     setguessResponse(data);
+    console.log(data.strikes);
 
     if (response.ok) {
       setGuess("");
@@ -180,26 +189,39 @@ export function Home() {
         </div>
       </div>
       <div>
-        {gameOver ? (
-          "Game over"
+        {gameEnd?.victory ? (
+          <div className="end-text">You did it!</div>
+        ) : gameEnd?.defeat ? (
+          <div className="end-text">Game Over</div>
         ) : (
           <div>
             <form className="guess-box" onSubmit={submitGuess}>
               <input className="box" type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
             </form>
-            <div>
-              {gameState?.guesses?.map((guess) => (
-                <div>{guess.Verdict === false && `${guess.Guess}: incorrect`}</div>
-              ))}
-            </div>
-            <div>
-              {[...incorrectGuess].map((guess) => (
-                <div>{guess}: incorrect</div>
-              ))}
-            </div>
-            <div>strikes: {guessResponse?.strikes ?? gameState?.strikes}</div>
           </div>
         )}
+      </div>
+      <div className="strikes">
+        {(guessResponse?.strikes ?? 0) >= 1 || (gameState?.strikes ?? 0) >= 1 ? (
+          <span className="strike-box"></span>
+        ) : (
+          <span className="strike-box-empty"></span>
+        )}
+        {(guessResponse?.strikes ?? 0) >= 2 || (gameState?.strikes ?? 0) >= 2 ? (
+          <span className="strike-box"></span>
+        ) : (
+          <span className="strike-box-empty"></span>
+        )}
+        {guessResponse?.strikes === 3 || gameState?.strikes === 3 ? (
+          <span className="strike-box"></span>
+        ) : (
+          <span className="strike-box-empty"></span>
+        )}
+      </div>
+      <div className="missed-guess">
+        {[...incorrectGuess].map((guess) => (
+          <div>{guess}</div>
+        ))}
       </div>
     </div>
   );
