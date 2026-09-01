@@ -19,6 +19,7 @@ type Payload struct {
 	PlayerID   string   `json:"playerid"`
 	Repeat     bool     `json:"repeat"`
 	PosterPath []string `json:"poster_path"`
+	GameOver   bool     `json:"game_over"`
 }
 
 func (cfg *apiConfig) answerReveal(strikes int, game database.Game) (FilmAnswers, error) {
@@ -135,6 +136,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 			PlayerID:   uuid.UUID.String(fetchedGuess.PlayerID),
 			Repeat:     true,
 			PosterPath: posterPath,
+			GameOver:   gameOverCheck(int(strikes)),
 		}, nil
 	}
 	// Create guess in database if new
@@ -167,6 +169,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 		PlayerID:   uuid.UUID.String(playerID),
 		Repeat:     false,
 		PosterPath: posterPath,
+		GameOver:   gameOverCheck(int(strikes)),
 	}, nil
 }
 

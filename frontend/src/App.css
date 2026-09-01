@@ -1,3 +1,6 @@
+.background {
+  min-height: 100svh;
+}
 .actor-name {
   font-size: larger;
   color: black;

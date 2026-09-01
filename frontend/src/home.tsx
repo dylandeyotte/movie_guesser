@@ -1,53 +1,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 
-type gameInfo = {
-  actor: string;
-  gamedate: string;
-};
-
-type filmCard = {
-  title: string;
-  poster: string;
-  status: "hidden" | "correct" | "failed";
-};
-
-type FilmAnswers = {
-  film1: string;
-  film1_poster: string;
-  film2: string;
-  film2_poster: string;
-  film3: string;
-  film3_poster: string;
-};
-
-type guessResponse = {
-  verdict: boolean;
-  film_number: number;
-  strikes: number;
-  guess: string;
-  playerid: string;
-  repeat: boolean;
-  poster_path: string[];
-};
-
-type guessInfo = {
-  Date: string;
-  FilmNumber: number;
-  Guess: string;
-  Verdict: boolean;
-};
-
-type gameState = {
-  date: string;
-  actor: string;
-  playerid: string;
-  guesses: guessInfo[];
-  strikes: number;
-  posters: string[];
-  game_over: boolean;
-  answers: FilmAnswers;
-};
+import type { status, gameInfo, filmCard, guessResponse, gameState } from "./helpers";
 
 export function Home() {
   const [info, setInfo] = useState<gameInfo>();
@@ -57,32 +11,37 @@ export function Home() {
   const [filmTwo, setFilmTwo] = useState<filmCard>();
   const [filmThree, setFilmThree] = useState<filmCard>();
   const [gameState, setGameState] = useState<gameState>();
-  const [gameResponse, setgameResponse] = useState<guessResponse>();
+  const [guessResponse, setguessResponse] = useState<guessResponse>();
   const [incorrectGuess, setIncorrectGuess] = useState<Set<string>>(new Set());
-  const [correctGuess, setCorrectGuess] = useState<Set<string>>(new Set());
 
   const playerID = localStorage.getItem("playerID") ?? crypto.randomUUID();
 
   localStorage.setItem("playerID", playerID);
 
-  function gameOverReveal(films: string[], paths: string[]) {
-    setFilmOne({
-      title: films[0],
-      poster: `https://image.tmdb.org/t/p/w500${paths[0]}`,
-      status: "failed",
-    });
-    setFilmTwo({
-      title: films[1],
-      poster: `https://image.tmdb.org/t/p/w500${paths[1]}`,
-      status: "failed",
-    });
-    setFilmThree({
-      title: films[2],
-      poster: `https://image.tmdb.org/t/p/w500${paths[2]}`,
-      status: "failed",
-    });
-
-    console.log(films, paths);
+  function setFilmHelper(film: string, path: string, status: status, filmNumber: number) {
+    switch (filmNumber) {
+      case 1:
+        setFilmOne({
+          title: film,
+          poster: `https://image.tmdb.org/t/p/w500${path}`,
+          status: status,
+        });
+        break;
+      case 2:
+        setFilmTwo({
+          title: film,
+          poster: `https://image.tmdb.org/t/p/w500${path}`,
+          status: status,
+        });
+        break;
+      case 3:
+        setFilmThree({
+          title: film,
+          poster: `https://image.tmdb.org/t/p/w500${path}`,
+          status: status,
+        });
+        break;
+    }
   }
 
   async function gameStatePull() {
@@ -97,47 +56,33 @@ export function Home() {
 
       if (data.game_over === true) {
         setGameOver(true);
-        gameOverReveal(
-          [data.answers.film1, data.answers.film2, data.answers.film3],
-          [data.answers.film1_poster, data.answers.film2_poster, data.answers.film3_poster],
-        );
+        setFilmHelper(data.answers.film1, data.answers.film1_poster, "failed", 1);
+        setFilmHelper(data.answers.film2, data.answers.film2_poster, "failed", 2);
+        setFilmHelper(data.answers.film3, data.answers.film3_poster, "failed", 3);
       }
 
       for (const guess of data.guesses) {
         if (guess.Verdict === true) {
           switch (guess.FilmNumber) {
             case 1:
-              setFilmOne({
-                title: guess.Guess,
-                poster: `https://image.tmdb.org/t/p/w500${data.posters[0]}`,
-                status: "correct",
-              });
+              setFilmHelper(guess.Guess, data.posters[0], "correct", 1);
               break;
             case 2:
-              setFilmTwo({
-                title: guess.Guess,
-                poster: `https://image.tmdb.org/t/p/w500${data.posters[1]}`,
-                status: "correct",
-              });
+              setFilmHelper(guess.Guess, data.posters[1], "correct", 2);
               break;
             case 3:
-              setFilmThree({
-                title: guess.Guess,
-                poster: `https://image.tmdb.org/t/p/w500${data.posters[2]}`,
-                status: "correct",
-              });
+              setFilmHelper(guess.Guess, data.posters[2], "correct", 3);
               break;
           }
         }
       }
+      console.log(data.posters);
 
       setGameState(data);
 
       if (data) {
         for (const guess of data?.guesses) {
-          guess.Verdict === true
-            ? setCorrectGuess((prev) => new Set(prev).add(guess.Guess))
-            : setIncorrectGuess((prev) => new Set(prev).add(guess.Guess));
+          guess.Verdict === false && setIncorrectGuess((prev) => new Set(prev).add(guess.Guess));
           console.log(guess.Guess);
         }
       }
@@ -179,40 +124,27 @@ export function Home() {
 
     const data = await response.json();
 
-    if (data.strikes >= 3) {
+    if (data.game_over === true) {
       await gameStatePull();
     }
+    console.log(data);
 
     switch (data.film_number) {
       case 1:
-        setFilmOne({
-          title: data.guess,
-          poster: `https://image.tmdb.org/t/p/w500${data.poster_path[0]}`,
-          status: data.verdict === true ? "correct" : "hidden",
-        });
+        setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 1);
         break;
       case 2:
-        setFilmTwo({
-          title: data.guess,
-          poster: `https://image.tmdb.org/t/p/w500${data.poster_path[0]}`,
-          status: data.verdict === true ? "correct" : "hidden",
-        });
+        setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 2);
         break;
       case 3:
-        setFilmThree({
-          title: data.guess,
-          poster: `https://image.tmdb.org/t/p/w500${data.poster_path[0]}`,
-          status: data.verdict === true ? "correct" : "hidden",
-        });
+        setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 3);
         break;
     }
 
     if (data.verdict == false) {
       setIncorrectGuess(new Set(incorrectGuess).add(guess));
-    } else {
-      setCorrectGuess(new Set(correctGuess).add(guess));
     }
-    setgameResponse(data);
+    setguessResponse(data);
 
     if (response.ok) {
       setGuess("");
@@ -225,7 +157,7 @@ export function Home() {
   }, []);
 
   return (
-    <div>
+    <div className="background">
       <div className="actor-name">{info?.actor}</div>
       <div className="poster-container">
         <div className="poster-card">
@@ -265,7 +197,7 @@ export function Home() {
                 <div>{guess}: incorrect</div>
               ))}
             </div>
-            <div>strikes: {gameResponse?.strikes ?? gameState?.strikes}</div>
+            <div>strikes: {guessResponse?.strikes ?? gameState?.strikes}</div>
           </div>
         )}
       </div>
