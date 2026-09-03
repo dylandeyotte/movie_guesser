@@ -20,6 +20,7 @@ type Payload struct {
 	Repeat     bool     `json:"repeat"`
 	PosterPath []string `json:"poster_path"`
 	GameOver   bool     `json:"game_over"`
+	Victory    bool     `json:"victory"`
 }
 
 func (cfg *apiConfig) answerReveal(strikes int, game database.Game) (FilmAnswers, error) {
@@ -42,6 +43,16 @@ func (cfg *apiConfig) answerReveal(strikes int, game database.Game) (FilmAnswers
 
 func gameOverCheck(strikes int) bool {
 	return strikes >= 3
+}
+
+func victoryCheck(guesses []database.Guess) bool {
+	count := 0
+	for _, guess := range guesses {
+		if guess.Verdict == true {
+			count++
+		}
+	}
+	return count == 3
 }
 
 func (cfg *apiConfig) fetchPosterPaths(filmIDList []int) ([]string, error) {
@@ -107,9 +118,17 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 		poster, err := cfg.fetchPosterPaths([]int{filmID})
 		posterPath = append(posterPath, poster[0])
 		if err != nil {
-			fmt.Println(err)
 			return Payload{}, err
 		}
+	}
+	// Get list of correct guesses to check for victory
+	// This is prior to the guess entering the db in case of dulpicate guess
+	guesses, err := cfg.database.FetchGuessList(context.Background(), database.FetchGuessListParams{
+		Date:     date,
+		PlayerID: playerID,
+	})
+	if err != nil {
+		return Payload{}, err
 	}
 	// Check if guess has been guessed and return if so
 	fetchedGuess, err := cfg.database.FetchGuess(context.Background(), database.FetchGuessParams{
@@ -137,6 +156,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 			Repeat:     true,
 			PosterPath: posterPath,
 			GameOver:   gameOverCheck(int(strikes)),
+			Victory:    victoryCheck(guesses),
 		}, nil
 	}
 	// Create guess in database if new
@@ -149,6 +169,15 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 	})
 	if err != nil {
 		fmt.Println(err)
+		return Payload{}, err
+	}
+	// Get list of correct guesses to check for victory
+	// This is after the guess is entered into the db, the updated list
+	updatedGuesses, err := cfg.database.FetchGuessList(context.Background(), database.FetchGuessListParams{
+		Date:     date,
+		PlayerID: playerID,
+	})
+	if err != nil {
 		return Payload{}, err
 	}
 	// Calculate strike count
@@ -170,6 +199,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 		Repeat:     false,
 		PosterPath: posterPath,
 		GameOver:   gameOverCheck(int(strikes)),
+		Victory:    victoryCheck(updatedGuesses),
 	}, nil
 }
 

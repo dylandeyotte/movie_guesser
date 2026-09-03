@@ -65,6 +65,7 @@ func main() {
 	mux.HandleFunc("GET /api/actor", apiCfg.handlerActorFetch)
 	mux.HandleFunc("POST /api/guess", apiCfg.handlerVerifyGuess)
 	mux.HandleFunc("GET /api/gamestate", apiCfg.handlerGameState)
+	mux.HandleFunc("GET /api/stats", apiCfg.handlerStats)
 
 	server := http.Server{
 		Handler: corsMiddleware(mux),

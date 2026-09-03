@@ -83,7 +83,7 @@ func (q *Queries) FetchGuess(ctx context.Context, arg FetchGuessParams) (Guess, 
 }
 
 const fetchGuessList = `-- name: FetchGuessList :many
-SELECT date, film_number, guess, verdict FROM guesses
+SELECT id, film_number, created_at, date, player_id, guess, verdict FROM guesses
 WHERE date = $1
 AND player_id = $2
 `
@@ -93,25 +93,21 @@ type FetchGuessListParams struct {
 	PlayerID uuid.UUID
 }
 
-type FetchGuessListRow struct {
-	Date       string
-	FilmNumber int32
-	Guess      string
-	Verdict    bool
-}
-
-func (q *Queries) FetchGuessList(ctx context.Context, arg FetchGuessListParams) ([]FetchGuessListRow, error) {
+func (q *Queries) FetchGuessList(ctx context.Context, arg FetchGuessListParams) ([]Guess, error) {
 	rows, err := q.db.QueryContext(ctx, fetchGuessList, arg.Date, arg.PlayerID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []FetchGuessListRow
+	var items []Guess
 	for rows.Next() {
-		var i FetchGuessListRow
+		var i Guess
 		if err := rows.Scan(
-			&i.Date,
+			&i.ID,
 			&i.FilmNumber,
+			&i.CreatedAt,
+			&i.Date,
+			&i.PlayerID,
 			&i.Guess,
 			&i.Verdict,
 		); err != nil {

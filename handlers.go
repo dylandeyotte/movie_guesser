@@ -137,14 +137,15 @@ func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) 
 
 func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 	type gameState struct {
-		Date     string                       `json:"date"`
-		Actor    string                       `json:"actor"`
-		PlayerID string                       `json:"playerid"`
-		Guesses  []database.FetchGuessListRow `json:"guesses"`
-		Strikes  int                          `json:"strikes"`
-		Posters  []string                     `json:"posters"`
-		GameOver bool                         `json:"game_over"`
-		Answers  FilmAnswers                  `json:"answers,omitempty"`
+		Date     string           `json:"date"`
+		Actor    string           `json:"actor"`
+		PlayerID string           `json:"playerid"`
+		Guesses  []database.Guess `json:"guesses"`
+		Strikes  int              `json:"strikes"`
+		Posters  []string         `json:"posters"`
+		GameOver bool             `json:"game_over"`
+		Victory  bool             `json:"victory"`
+		Answers  FilmAnswers      `json:"answers,omitempty"`
 	}
 
 	// Get todays date
@@ -202,6 +203,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 				Strikes:  int(strikes),
 				Posters:  posterPaths,
 				GameOver: gameOverCheck(int(strikes)),
+				Victory:  victoryCheck(guesses),
 				Answers:  answers,
 			})
 			return
@@ -219,6 +221,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		Strikes:  int(strikes),
 		Posters:  posterPaths,
 		GameOver: gameOverCheck(int(strikes)),
+		Victory:  victoryCheck(guesses),
 		Answers:  answers,
 	})
 }

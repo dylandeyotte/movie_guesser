@@ -28,6 +28,8 @@ export type guessResponse = {
   playerid: string;
   repeat: boolean;
   poster_path: string[];
+  game_over: boolean;
+  victory: boolean;
 };
 
 export type guessInfo = {
@@ -45,5 +47,6 @@ export type gameState = {
   strikes: number;
   posters: string[];
   game_over: boolean;
+  victory: boolean;
   answers: FilmAnswers;
 };

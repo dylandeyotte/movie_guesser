@@ -59,16 +59,25 @@ export function Home() {
       });
       const data = await response.json();
 
+      // End game if victorious
+      if (data.victory === true) {
+        setGameEnd({
+          victory: true,
+          defeat: false,
+        });
+      }
+      // End game if failed
       if (data.game_over === true) {
         setGameEnd({
           victory: false,
           defeat: true,
         });
+        // Reveal answers
         setFilmHelper(data.answers.film1, data.answers.film1_poster, "failed", 1);
         setFilmHelper(data.answers.film2, data.answers.film2_poster, "failed", 2);
         setFilmHelper(data.answers.film3, data.answers.film3_poster, "failed", 3);
       }
-
+      // Display guessed films
       for (const guess of data.guesses) {
         if (guess.Verdict === true) {
           switch (guess.FilmNumber) {
@@ -84,10 +93,10 @@ export function Home() {
           }
         }
       }
-      console.log(data.strikes);
 
       setGameState(data);
 
+      // Display incorrect guesses
       if (data) {
         for (const guess of data?.guesses) {
           guess.Verdict === false && setIncorrectGuess((prev) => new Set(prev).add(guess.Guess));
@@ -132,11 +141,23 @@ export function Home() {
 
     const data = await response.json();
 
+    // End game if victorious
     if (data.game_over === true) {
-      await gameStatePull();
+      setGameEnd({
+        victory: false,
+        defeat: true,
+      });
+    }
+    // End game if failed
+    if (data.victory === true) {
+      setGameEnd({
+        victory: true,
+        defeat: false,
+      });
     }
     console.log(data);
 
+    // Display correct guess
     switch (data.film_number) {
       case 1:
         setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 1);
@@ -148,13 +169,13 @@ export function Home() {
         setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 3);
         break;
     }
-
+    // Display incorrect guess
     if (data.verdict == false) {
       setIncorrectGuess(new Set(incorrectGuess).add(guess));
     }
     setguessResponse(data);
-    console.log(data.strikes);
 
+    // Reset guess bar
     if (response.ok) {
       setGuess("");
     }
@@ -189,9 +210,9 @@ export function Home() {
         </div>
       </div>
       <div>
-        {gameEnd?.victory ? (
+        {gameEnd?.victory === true ? (
           <div className="end-text">You did it!</div>
-        ) : gameEnd?.defeat ? (
+        ) : gameEnd?.defeat === true ? (
           <div className="end-text">Game Over</div>
         ) : (
           <div>

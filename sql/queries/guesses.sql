@@ -18,7 +18,7 @@ AND player_id = $2
 AND guess = $3;
 
 -- name: FetchGuessList :many
-SELECT date, film_number, guess, verdict FROM guesses
+SELECT * FROM guesses
 WHERE date = $1
 AND player_id = $2;
 
