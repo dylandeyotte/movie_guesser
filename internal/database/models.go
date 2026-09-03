@@ -44,3 +44,14 @@ type Guess struct {
 	Guess      string
 	Verdict    bool
 }
+
+type UserGame struct {
+	ID               uuid.UUID
+	CreatedAt        time.Time
+	Date             string
+	PlayerID         uuid.UUID
+	Actor            string
+	CorrectGuesses   int32
+	IncorrectGuesses int32
+	Victory          bool
+}

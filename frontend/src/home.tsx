@@ -147,6 +147,7 @@ export function Home() {
         victory: false,
         defeat: true,
       });
+      await gameStatePull(); // MIDNIGHT OVERFLOW
     }
     // End game if failed
     if (data.victory === true) {

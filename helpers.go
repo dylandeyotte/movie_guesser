@@ -55,6 +55,21 @@ func victoryCheck(guesses []database.Guess) bool {
 	return count == 3
 }
 
+func (cfg *apiConfig) createUserGameHelper(playerID uuid.UUID, date, actor string, correctGuesses, incorrectGuesses int, victory bool) error {
+	_, err := cfg.database.CreateUserGame(context.Background(), database.CreateUserGameParams{
+		Date:             date,
+		PlayerID:         playerID,
+		Actor:            actor,
+		CorrectGuesses:   int32(correctGuesses),
+		IncorrectGuesses: int32(incorrectGuesses),
+		Victory:          victory,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (cfg *apiConfig) fetchPosterPaths(filmIDList []int) ([]string, error) {
 	posterPaths := []string{}
 
@@ -111,13 +126,14 @@ func (cfg *apiConfig) enterFilm(movieID int, errCh chan error) {
 
 }
 
-func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerID uuid.UUID, guess string, verdict bool) (Payload, error) {
+func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerID uuid.UUID, guess, actor string, verdict bool) (Payload, error) {
 	// If guess is correct, fetch poster path
 	posterPath := []string{}
 	if verdict == true {
 		poster, err := cfg.fetchPosterPaths([]int{filmID})
 		posterPath = append(posterPath, poster[0])
 		if err != nil {
+			fmt.Println(err)
 			return Payload{}, err
 		}
 	}
@@ -128,6 +144,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 		PlayerID: playerID,
 	})
 	if err != nil {
+		fmt.Println(err)
 		return Payload{}, err
 	}
 	// Check if guess has been guessed and return if so
@@ -147,6 +164,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 			fmt.Println(err)
 			return Payload{}, err
 		}
+		fmt.Printf("%v repeated the guess: %v\n", playerID, guess)
 		return Payload{
 			Verdict:    fetchedGuess.Verdict,
 			FilmNumber: int(fetchedGuess.FilmNumber),
@@ -178,6 +196,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 		PlayerID: playerID,
 	})
 	if err != nil {
+		fmt.Println(err)
 		return Payload{}, err
 	}
 	// Calculate strike count
@@ -189,6 +208,24 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 		fmt.Println(err)
 		return Payload{}, err
 	}
+	fmt.Printf("%v guessed: %v, it was %v, strikes: %v\n", playerID, guess, verdict, strikes)
+	// If victory, create completed game in db
+	if victoryCheck(updatedGuesses) {
+		if err := cfg.createUserGameHelper(playerID, date, actor, 3, int(strikes), true); err != nil {
+			fmt.Println(err)
+			return Payload{}, err
+		}
+		fmt.Printf("%v won with %v strikes. Today's actor was %v\n", playerID, strikes, actor)
+	}
+	// If defeat, create completed game in db
+	if gameOverCheck(int(strikes)) {
+		if err := cfg.createUserGameHelper(playerID, date, actor, len(updatedGuesses)-3, 3, false); err != nil {
+			fmt.Println(err)
+			return Payload{}, err
+		}
+		fmt.Printf("%v lost with %v correct guesses. Today's actor was %v\n", playerID, len(updatedGuesses)-3, actor)
+	}
+
 	// Return payload
 	return Payload{
 		Verdict:    verdict,
