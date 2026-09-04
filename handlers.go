@@ -38,14 +38,11 @@ func (cfg *apiConfig) handlerStats(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Error fetching stats", err)
 		return
 	}
-
+	// Calculate win percentage
 	winPCT := "-"
-
 	if stats.GamesPlayed > 0 {
-		winPCT = fmt.Sprintf(
-			"%d%%",
-			stats.Victories*100/stats.GamesPlayed,
-		)
+		pct := float64(stats.Victories) * 100 / float64(stats.GamesPlayed)
+		winPCT = fmt.Sprintf("%.2f%%", pct)
 	}
 	// Ready stats for json
 	GS := gameStats{

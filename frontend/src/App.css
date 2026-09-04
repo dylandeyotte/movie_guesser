@@ -98,3 +98,64 @@
   font-size: larger;
   color: black;
 }
+
+.stats-background {
+  background-color: rgb(96, 34, 34);
+  height: 100vh;
+}
+
+.stats-title {
+  font-size: x-large;
+  color: black;
+  margin-bottom: 20px;
+}
+
+.all-stats {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 700px;
+  margin: 0 auto;
+  gap: 20px;
+  /* border-style: solid;
+  border-color: black; */
+}
+
+.top-stats {
+  display: flex;
+  justify-content: space-between;
+  width: 700px;
+  margin-left: 2px;
+  color: black;
+}
+
+.distro {
+  width: 700px;
+}
+
+.distro-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.distro-label {
+  width: 30px;
+  text-align: right;
+  color: black;
+}
+
+.distro-track {
+  flex: 1;
+}
+
+.distro-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  height: 30px;
+  background: rgb(152, 50, 50);
+  color: black;
+}
