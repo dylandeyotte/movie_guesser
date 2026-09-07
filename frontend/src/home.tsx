@@ -73,6 +73,7 @@ export function Home() {
           defeat: true,
         });
         // Reveal answers
+        console.log(data.answers.film3_poster);
         setFilmHelper(data.answers.film1, data.answers.film1_poster, "failed", 1);
         setFilmHelper(data.answers.film2, data.answers.film2_poster, "failed", 2);
         setFilmHelper(data.answers.film3, data.answers.film3_poster, "failed", 3);
@@ -127,6 +128,14 @@ export function Home() {
   const submitGuess = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    guessHelper(guess, false);
+  };
+
+  const submitGiveUp = async () => {
+    guessHelper("", true);
+  };
+
+  const guessHelper = async (guess: string, giveUp: boolean) => {
     const response = await fetch("http://localhost:8080/api/guess", {
       method: "POST",
       headers: {
@@ -136,6 +145,7 @@ export function Home() {
       body: JSON.stringify({
         guess: guess,
         gamedate: info?.gamedate,
+        giveup: giveUp,
       }),
     });
 
@@ -155,6 +165,7 @@ export function Home() {
         victory: true,
         defeat: false,
       });
+      await gameStatePull(); // MIDNIGHT OVERFLOW
     }
     console.log(data);
 
@@ -220,6 +231,7 @@ export function Home() {
             <form className="guess-box" onSubmit={submitGuess}>
               <input className="box" type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
             </form>
+            <button onClick={submitGiveUp}>Give Up</button>
           </div>
         )}
       </div>

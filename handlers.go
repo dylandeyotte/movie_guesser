@@ -188,7 +188,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		Posters  []string         `json:"posters"`
 		GameOver bool             `json:"game_over"`
 		Victory  bool             `json:"victory"`
-		Answers  FilmAnswers      `json:"answers,omitempty"`
+		Answers  FilmAnswers      `json:"answers"`
 	}
 
 	// Get todays date
@@ -201,12 +201,6 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Error parsing UUID", err)
 		return
 	}
-	// Return Game
-	game, err := cfg.database.ReturnGame(r.Context(), today)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Error returning game", err)
-		return
-	}
 	// Calculate strikes
 	strikes, err := cfg.database.StrikeCount(r.Context(), database.StrikeCountParams{
 		Date:     today,
@@ -214,6 +208,29 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error calculating strikes", err)
+		return
+	}
+
+	// Check game over based on strikes
+	// Then check if user game exists from a give up
+	// If player gave up then assign gameOver to true
+	gameOver := gameOverCheck(int(strikes))
+	userGame, err := cfg.database.FetchUserGame(r.Context(), database.FetchUserGameParams{
+		PlayerID: playerID,
+		Date:     today,
+	})
+	if err == nil && userGame.IncorrectGuesses == 3 {
+		gameOver = true
+		strikes = 3
+	}
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		respondWithError(w, http.StatusInternalServerError, "Error fetching user game", err)
+		return
+	}
+	// Return Game
+	game, err := cfg.database.ReturnGame(r.Context(), today)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error returning game", err)
 		return
 	}
 	// Retrieve poster paths from ID
@@ -224,13 +241,12 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Error fetching poster paths", err)
 		return
 	}
-
+	// Fetch answers from db
 	answers, err := cfg.answerReveal(int(strikes), game)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error gathering answers", err)
 		return
 	}
-
 	// Fetch list of guesses
 	guesses, err := cfg.database.FetchGuessList(r.Context(), database.FetchGuessListParams{
 		Date:     today,
@@ -245,8 +261,8 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 				Guesses:  guesses,
 				Strikes:  int(strikes),
 				Posters:  posterPaths,
-				GameOver: gameOverCheck(int(strikes)),
-				Victory:  victoryCheck(guesses),
+				GameOver: gameOver,
+				Victory:  correctGuessesCheck(guesses) == 3,
 				Answers:  answers,
 			})
 			return
@@ -255,7 +271,6 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
 	respondWithJSON(w, http.StatusOK, gameState{
 		Date:     game.Date,
 		Actor:    game.ActorName,
@@ -263,8 +278,8 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		Guesses:  guesses,
 		Strikes:  int(strikes),
 		Posters:  posterPaths,
-		GameOver: gameOverCheck(int(strikes)),
-		Victory:  victoryCheck(guesses),
+		GameOver: gameOver,
+		Victory:  correctGuessesCheck(guesses) == 3,
 		Answers:  answers,
 	})
 }
@@ -274,6 +289,7 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 	type parameters struct {
 		Guess    string `json:"guess"`
 		GameDate string `json:"gamedate"`
+		GiveUp   bool   `json:"giveup"`
 	}
 
 	params := parameters{}
@@ -297,6 +313,34 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 	playerID, err := uuid.Parse(playerIDString)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error parsing UUID", err)
+		return
+	}
+	// If player gave up, create user game
+	if params.GiveUp == true {
+		guessList, err := cfg.database.FetchGuessList(r.Context(), database.FetchGuessListParams{
+			Date:     params.GameDate,
+			PlayerID: playerID,
+		})
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Error fetching guess list", err)
+			return
+		}
+		if err := cfg.createUserGameHelper(playerID, params.GameDate, game.ActorName, correctGuessesCheck(guessList), 3, false); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Error creating user game", err)
+			return
+		}
+		fmt.Printf("%v, gave up with %v correct guesses, today's actor was %v", playerID, correctGuessesCheck(guessList), game.ActorName)
+		respondWithJSON(w, http.StatusOK, Payload{
+			Verdict:    false,
+			FilmNumber: 0,
+			Strikes:    3,
+			Guess:      "",
+			PlayerID:   uuid.UUID.String(playerID),
+			Repeat:     false,
+			PosterPath: []string{},
+			GameOver:   true,
+			Victory:    false,
+		})
 		return
 	}
 

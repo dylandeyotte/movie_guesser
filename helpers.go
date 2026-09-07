@@ -45,14 +45,14 @@ func gameOverCheck(strikes int) bool {
 	return strikes >= 3
 }
 
-func victoryCheck(guesses []database.Guess) bool {
+func correctGuessesCheck(guesses []database.Guess) int {
 	count := 0
 	for _, guess := range guesses {
 		if guess.Verdict == true {
 			count++
 		}
 	}
-	return count == 3
+	return count
 }
 
 func (cfg *apiConfig) createUserGameHelper(playerID uuid.UUID, date, actor string, correctGuesses, incorrectGuesses int, victory bool) error {
@@ -174,7 +174,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 			Repeat:     true,
 			PosterPath: posterPath,
 			GameOver:   gameOverCheck(int(strikes)),
-			Victory:    victoryCheck(guesses),
+			Victory:    correctGuessesCheck(guesses) == 3,
 		}, nil
 	}
 	// Create guess in database if new
@@ -210,7 +210,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 	}
 	fmt.Printf("%v guessed: %v, it was %v, strikes: %v\n", playerID, guess, verdict, strikes)
 	// If victory, create completed game in db
-	if victoryCheck(updatedGuesses) {
+	if correctGuessesCheck(updatedGuesses) == 3 {
 		if err := cfg.createUserGameHelper(playerID, date, actor, 3, int(strikes), true); err != nil {
 			fmt.Println(err)
 			return Payload{}, err
@@ -219,11 +219,11 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 	}
 	// If defeat, create completed game in db
 	if gameOverCheck(int(strikes)) {
-		if err := cfg.createUserGameHelper(playerID, date, actor, len(updatedGuesses)-3, 3, false); err != nil {
+		if err := cfg.createUserGameHelper(playerID, date, actor, correctGuessesCheck(updatedGuesses), 3, false); err != nil {
 			fmt.Println(err)
 			return Payload{}, err
 		}
-		fmt.Printf("%v lost with %v correct guesses. Today's actor was %v\n", playerID, len(updatedGuesses)-3, actor)
+		fmt.Printf("%v lost with %v correct guesses. Today's actor was %v\n", playerID, correctGuessesCheck(updatedGuesses), actor)
 	}
 
 	// Return payload
@@ -236,7 +236,7 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 		Repeat:     false,
 		PosterPath: posterPath,
 		GameOver:   gameOverCheck(int(strikes)),
-		Victory:    victoryCheck(updatedGuesses),
+		Victory:    correctGuessesCheck(updatedGuesses) == 3,
 	}, nil
 }
 

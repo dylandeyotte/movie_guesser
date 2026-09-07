@@ -90,3 +90,30 @@ func (q *Queries) FetchStats(ctx context.Context, playerID uuid.UUID) (FetchStat
 	)
 	return i, err
 }
+
+const fetchUserGame = `-- name: FetchUserGame :one
+SELECT id, created_at, date, player_id, actor, correct_guesses, incorrect_guesses, victory FROM user_games
+WHERE player_id = $1
+AND date = $2
+`
+
+type FetchUserGameParams struct {
+	PlayerID uuid.UUID
+	Date     string
+}
+
+func (q *Queries) FetchUserGame(ctx context.Context, arg FetchUserGameParams) (UserGame, error) {
+	row := q.db.QueryRowContext(ctx, fetchUserGame, arg.PlayerID, arg.Date)
+	var i UserGame
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Date,
+		&i.PlayerID,
+		&i.Actor,
+		&i.CorrectGuesses,
+		&i.IncorrectGuesses,
+		&i.Victory,
+	)
+	return i, err
+}
