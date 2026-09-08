@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Undo2 } from "lucide-react";
 
 type stats = {
   games_played: number;
@@ -16,6 +18,7 @@ type guessDistribution = {
 };
 
 export function Stats() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<stats>();
   const [statsDistribution, setStatsDistribution] = useState<guessDistribution[]>([]);
 
@@ -54,7 +57,12 @@ export function Stats() {
 
   return (
     <div className="stats-background">
-      <div className="stats-title">Stats</div>
+      <div className="stats-title-row">
+        <div className="stats-title">Stats</div>
+        <button className="home-button" onClick={() => navigate("/")}>
+          <Undo2 />
+        </button>
+      </div>
       <div className="all-stats">
         <div className="top-stats">
           <span>Games Played: {stats?.games_played}</span>

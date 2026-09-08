@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { CircleQuestionMark, ChartNoAxesColumn } from "lucide-react";
 
 import type { status, gameInfo, filmCard, guessResponse, gameState } from "./helpers";
 
@@ -9,6 +11,7 @@ type gameEnd = {
 };
 
 export function Home() {
+  const navigate = useNavigate();
   const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
   const [gameEnd, setGameEnd] = useState<gameEnd>();
@@ -200,25 +203,33 @@ export function Home() {
 
   return (
     <div className="background">
-      <div className="actor-name">{info?.actor}</div>
+      <div className="title-row">
+        <div className="actor-name">{info?.actor}</div>
+        <button className="stats-button" onClick={() => navigate("/stats")}>
+          <CircleQuestionMark />
+        </button>
+        <button className="stats-button" onClick={() => navigate("/stats")}>
+          <ChartNoAxesColumn />
+        </button>
+      </div>
       <div className="poster-container">
         <div className="poster-card">
           <div className={`poster ${filmOne?.status}`}>
             <img src={filmOne?.poster} className="poster-img" />
           </div>
-          <div className="title">{filmOne?.title ? filmOne.title : "???"}</div>
+          <div className="film-title">{filmOne?.title ? filmOne.title : "???"}</div>
         </div>
         <div className="poster-card">
           <div className={`poster ${filmTwo?.status}`}>
             <img src={filmTwo?.poster} className="poster-img" />
           </div>
-          <div className="title">{filmTwo?.title ? filmTwo.title : "???"}</div>
+          <div className="film-title">{filmTwo?.title ? filmTwo.title : "???"}</div>
         </div>
         <div className="poster-card">
           <div className={`poster ${filmThree?.status}`}>
             <img src={filmThree?.poster} className="poster-img" />
           </div>
-          <div className="title">{filmThree?.title ? filmThree.title : "???"}</div>
+          <div className="film-title">{filmThree?.title ? filmThree.title : "???"}</div>
         </div>
       </div>
       <div>
@@ -227,11 +238,15 @@ export function Home() {
         ) : gameEnd?.defeat === true ? (
           <div className="end-text">Game Over</div>
         ) : (
-          <div>
-            <form className="guess-box" onSubmit={submitGuess}>
-              <input className="box" type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
+          <div className="guess-bar-and-button">
+            <form className="guess-bar-container" onSubmit={submitGuess}>
+              <input className="guess-bar" type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
             </form>
-            <button onClick={submitGiveUp}>Give Up</button>
+            <div className="give-up-container">
+              <button className="give-up-button" onClick={submitGiveUp}>
+                Give Up
+              </button>
+            </div>
           </div>
         )}
       </div>
