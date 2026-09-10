@@ -205,12 +205,14 @@ export function Home() {
     <div className="background">
       <div className="title-row">
         <div className="actor-name">{info?.actor}</div>
-        <button className="stats-button" onClick={() => navigate("/stats")}>
-          <CircleQuestionMark />
-        </button>
-        <button className="stats-button" onClick={() => navigate("/stats")}>
-          <ChartNoAxesColumn />
-        </button>
+        <div className="home-buttons">
+          <button className="HTP-button" onClick={() => navigate("/stats")}>
+            <CircleQuestionMark />
+          </button>
+          <button className="stats-button" onClick={() => navigate("/stats")}>
+            <ChartNoAxesColumn />
+          </button>
+        </div>
       </div>
       <div className="poster-container">
         <div className="poster-card">

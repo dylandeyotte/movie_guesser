@@ -39,10 +39,10 @@ export function Stats() {
 
       setStats(data);
       setStatsDistribution([
-        { label: "0/3", value: data.zero_correct },
-        { label: "1/3", value: data.one_correct },
-        { label: "2/3", value: data.two_correct },
-        { label: "3/3", value: data.victories },
+        { label: "0", value: data.zero_correct },
+        { label: "1", value: data.one_correct },
+        { label: "2", value: data.two_correct },
+        { label: "3", value: data.victories },
       ]);
     } catch (err) {
       console.error(err);
@@ -59,7 +59,7 @@ export function Stats() {
     <div className="stats-background">
       <div className="stats-title-row">
         <div className="stats-title">Stats</div>
-        <button className="home-button" onClick={() => navigate("/")}>
+        <button className="return-button" onClick={() => navigate("/")}>
           <Undo2 />
         </button>
       </div>
@@ -68,6 +68,9 @@ export function Stats() {
           <span>Games Played: {stats?.games_played}</span>
           <span>Win Percentage: {stats?.win_percentage}</span>
           <span>Perfect Games: {stats?.perfect_wins}</span>
+        </div>
+        <div className="distro-title-container">
+          <div className="distro-title">Guess Distribution</div>
         </div>
         <div className="distro">
           {statsDistribution.map((stat) => (

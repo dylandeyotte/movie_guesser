@@ -7,6 +7,8 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
+  width: 1123px;
+  margin: 0 auto 0;
 }
 
 .actor-name {
@@ -15,12 +17,24 @@
   grid-column: 2;
 }
 
-.stats-button {
+.home-buttons {
   grid-column: 3;
   justify-self: end;
+  margin-top: 5px;
+}
+
+.stats-button {
   background-color: rgb(75, 75, 91);
   border: none;
   cursor: pointer;
+  transform: translateX(9px);
+}
+
+.HTP-button {
+  background-color: rgb(75, 75, 91);
+  border: none;
+  cursor: pointer;
+  transform: translateX(9px);
 }
 
 .poster-container {
@@ -153,7 +167,7 @@
 }
 
 .stats-background {
-  background-color: rgb(96, 34, 34);
+  background-color: rgb(75, 75, 91);
   height: 100vh;
 }
 
@@ -161,21 +175,25 @@
   grid-column: 2;
   font-size: x-large;
   color: black;
-  margin-bottom: 20px;
 }
 
 .stats-title-row {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
+  width: 700px;
+  margin: 0 auto 0;
+  margin-bottom: 20px;
 }
 
-.home-button {
+.return-button {
   grid-column: 3;
   justify-self: end;
-  background-color: rgb(96, 34, 34);
+  background-color: rgb(75, 75, 91);
   border: none;
   cursor: pointer;
+  transform: translateX(10px);
+  margin-top: 5px;
 }
 
 .all-stats {
@@ -185,8 +203,6 @@
   width: 700px;
   margin: 0 auto;
   gap: 20px;
-  /* border-style: solid;
-  border-color: black; */
 }
 
 .top-stats {
@@ -195,6 +211,21 @@
   width: 700px;
   margin-left: 2px;
   color: black;
+  font-size: x-large;
+}
+
+.distro-title {
+  display: flex;
+  font-size: medium;
+  font-weight: bold;
+}
+
+.distro-title-container {
+  display: flex;
+  justify-content: flex-start;
+  width: 700px;
+  margin-top: 20px;
+  margin-bottom: -15px;
 }
 
 .distro {
@@ -204,13 +235,12 @@
 .distro-row {
   display: flex;
   align-items: center;
-  gap: 10px;
   margin-bottom: 10px;
 }
 
 .distro-label {
-  width: 30px;
-  text-align: right;
+  width: 20px;
+  text-align: left;
   color: black;
 }
 
@@ -224,6 +254,6 @@
   justify-content: center;
   min-width: 15px;
   height: 30px;
-  background: rgb(152, 50, 50);
+  background-color: rgb(109, 109, 132);
   color: black;
 }
