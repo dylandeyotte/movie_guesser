@@ -52,13 +52,17 @@ export function Home() {
     }
   }
 
-  async function gameStatePull() {
+  async function gameStatePull(date: string) {
     try {
       const response = await fetch("http://localhost:8080/api/gamestate", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Player-ID": playerID,
         },
+        body: JSON.stringify({
+          date: date,
+        }),
       });
       const data = await response.json();
 
@@ -76,7 +80,6 @@ export function Home() {
           defeat: true,
         });
         // Reveal answers
-        console.log(data.answers.film3_poster);
         setFilmHelper(data.answers.film1, data.answers.film1_poster, "failed", 1);
         setFilmHelper(data.answers.film2, data.answers.film2_poster, "failed", 2);
         setFilmHelper(data.answers.film3, data.answers.film3_poster, "failed", 3);
@@ -104,7 +107,6 @@ export function Home() {
       if (data) {
         for (const guess of data?.guesses) {
           guess.Verdict === false && setIncorrectGuess((prev) => new Set(prev).add(guess.Guess));
-          console.log(guess.Guess);
         }
       }
     } catch (err) {
@@ -122,6 +124,7 @@ export function Home() {
       });
       const data = await response.json();
       setInfo(data);
+      return data;
     } catch (err) {
       console.error(err);
       throw err;
@@ -151,26 +154,26 @@ export function Home() {
         giveup: giveUp,
       }),
     });
-
     const data = await response.json();
 
     // End game if victorious
-    if (data.game_over === true) {
-      setGameEnd({
-        victory: false,
-        defeat: true,
-      });
-      await gameStatePull(); // MIDNIGHT OVERFLOW
+    if (info?.gamedate) {
+      if (data.game_over === true) {
+        setGameEnd({
+          victory: false,
+          defeat: true,
+        });
+        await gameStatePull(info?.gamedate);
+      }
+      // End game if failed
+      if (data.victory === true) {
+        setGameEnd({
+          victory: true,
+          defeat: false,
+        });
+        await gameStatePull(info?.gamedate);
+      }
     }
-    // End game if failed
-    if (data.victory === true) {
-      setGameEnd({
-        victory: true,
-        defeat: false,
-      });
-      await gameStatePull(); // MIDNIGHT OVERFLOW
-    }
-    console.log(data);
 
     // Display correct guess
     switch (data.film_number) {
@@ -197,8 +200,11 @@ export function Home() {
   };
 
   useEffect(() => {
-    gamePull();
-    gameStatePull();
+    async function loadGame() {
+      const gameInfo = await gamePull();
+      await gameStatePull(gameInfo.gamedate);
+    }
+    loadGame();
   }, []);
 
   return (
@@ -271,7 +277,7 @@ export function Home() {
       </div>
       <div className="missed-guess">
         {[...incorrectGuess].map((guess) => (
-          <div>{guess}</div>
+          <div key={guess}>{guess}</div>
         ))}
       </div>
     </div>

@@ -179,6 +179,9 @@ func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) 
 }
 
 func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		Date string `json:"date"`
+	}
 	type gameState struct {
 		Date     string           `json:"date"`
 		Actor    string           `json:"actor"`
@@ -191,8 +194,14 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		Answers  FilmAnswers      `json:"answers"`
 	}
 
-	// Get todays date
-	today := time.Now().Format("2006-01-02")
+	params := parameters{}
+
+	// Decode response
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&params); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Decoding error", err)
+		return
+	}
 
 	// Parse player ID
 	playerIDString := r.Header.Get("X-Player-ID")
@@ -203,7 +212,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 	}
 	// Calculate strikes
 	strikes, err := cfg.database.StrikeCount(r.Context(), database.StrikeCountParams{
-		Date:     today,
+		Date:     params.Date,
 		PlayerID: playerID,
 	})
 	if err != nil {
@@ -217,7 +226,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 	gameOver := gameOverCheck(int(strikes))
 	userGame, err := cfg.database.FetchUserGame(r.Context(), database.FetchUserGameParams{
 		PlayerID: playerID,
-		Date:     today,
+		Date:     params.Date,
 	})
 	if err == nil && userGame.IncorrectGuesses == 3 {
 		gameOver = true
@@ -228,7 +237,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Return Game
-	game, err := cfg.database.ReturnGame(r.Context(), today)
+	game, err := cfg.database.ReturnGame(r.Context(), params.Date)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error returning game", err)
 		return
@@ -249,7 +258,7 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 	}
 	// Fetch list of guesses
 	guesses, err := cfg.database.FetchGuessList(r.Context(), database.FetchGuessListParams{
-		Date:     today,
+		Date:     params.Date,
 		PlayerID: playerID,
 	})
 	if err != nil {
@@ -285,7 +294,6 @@ func (cfg *apiConfig) handlerGameState(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request) {
-
 	type parameters struct {
 		Guess    string `json:"guess"`
 		GameDate string `json:"gamedate"`

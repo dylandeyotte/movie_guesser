@@ -74,8 +74,9 @@
 .film-title {
   display: flex;
   flex-direction: column;
-  max-width: 343px;
-  margin-top: -50px;
+  height: 60px;
+  width: 343px;
+  margin-top: -55px;
   justify-content: center;
   color: black;
   font-size: large;
