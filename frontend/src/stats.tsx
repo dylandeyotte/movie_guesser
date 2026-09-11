@@ -65,9 +65,16 @@ export function Stats() {
       </div>
       <div className="all-stats">
         <div className="top-stats">
-          <span>Games Played: {stats?.games_played}</span>
-          <span>Win Percentage: {stats?.win_percentage}</span>
-          <span>Perfect Games: {stats?.perfect_wins}</span>
+          <div className="stat-labels-row">
+            <span className="stats-label">Games Played</span>
+            <span className="stats-label">Win Percentage</span>
+            <span className="stats-label">Perfect Games</span>
+          </div>
+          <div className="stat-numbers-row">
+            <span className="stats-number">{stats?.games_played}</span>
+            <span className="stats-number">{stats?.win_percentage}</span>
+            <span className="stats-number">{stats?.perfect_wins}</span>
+          </div>
         </div>
         <div className="distro-title-container">
           <div className="distro-title">Guess Distribution</div>

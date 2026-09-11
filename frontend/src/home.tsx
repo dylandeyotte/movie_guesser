@@ -14,6 +14,7 @@ export function Home() {
   const navigate = useNavigate();
   const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
+  const [victoryText, setVictoryText] = useState("");
   const [gameEnd, setGameEnd] = useState<gameEnd>();
   const [filmOne, setFilmOne] = useState<filmCard>();
   const [filmTwo, setFilmTwo] = useState<filmCard>();
@@ -65,6 +66,9 @@ export function Home() {
         }),
       });
       const data = await response.json();
+
+      // Set victory text
+      data?.strikes && data.strikes > 0 ? setVictoryText("You did it!") : setVictoryText("Perfect!");
 
       // End game if victorious
       if (data.victory === true) {
@@ -156,6 +160,9 @@ export function Home() {
     });
     const data = await response.json();
 
+    // Set victory text
+    data?.strikes && data.strikes > 0 ? setVictoryText("You did it!") : setVictoryText("Perfect!");
+
     // End game if victorious
     if (info?.gamedate) {
       if (data.game_over === true) {
@@ -242,7 +249,7 @@ export function Home() {
       </div>
       <div>
         {gameEnd?.victory === true ? (
-          <div className="end-text">You did it!</div>
+          <div className="end-text">{victoryText}</div>
         ) : gameEnd?.defeat === true ? (
           <div className="end-text">Game Over</div>
         ) : (

@@ -167,6 +167,8 @@
   color: black;
 }
 
+/* STATS PAGE */
+
 .stats-background {
   background-color: rgb(75, 75, 91);
   height: 100vh;
@@ -174,7 +176,7 @@
 
 .stats-title {
   grid-column: 2;
-  font-size: x-large;
+  font-size: xx-large;
   color: black;
 }
 
@@ -184,7 +186,8 @@
   align-items: center;
   width: 700px;
   margin: 0 auto 0;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  margin-top: 30px;
 }
 
 .return-button {
@@ -201,13 +204,17 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  width: 700px;
+  align-items: center;
+  width: 750px;
+  height: 500px;
   margin: 0 auto;
   gap: 20px;
+  margin-top: -50px;
 }
 
 .top-stats {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   width: 700px;
   margin-left: 2px;
@@ -215,10 +222,48 @@
   font-size: x-large;
 }
 
+.stat-labels-row {
+  display: flex;
+  justify-content: space-between;
+  width: 700px;
+}
+
+.stats-label {
+  border-style: solid;
+  border-color: rgb(27, 27, 33);
+  width: 170px;
+  border-width: 4px;
+  border-bottom-width: 2px;
+  border-radius: 8px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+  color: white;
+}
+
+.stat-numbers-row {
+  display: flex;
+  justify-content: space-between;
+  width: 700px;
+}
+
+.stats-number {
+  border-style: solid;
+  border-color: rgb(27, 27, 33);
+  width: 170px;
+  border-width: 4px;
+  border-top-width: 2px;
+  border-radius: 8px;
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+  background-color: white;
+  color: rgb(75, 75, 91);
+}
+
 .distro-title {
   display: flex;
   font-size: medium;
   font-weight: bold;
+  color: rgb(27, 27, 33);
 }
 
 .distro-title-container {
