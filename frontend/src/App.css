@@ -167,6 +167,38 @@
   color: black;
 }
 
+/* HTP OVERLAY */
+
+.modal-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal {
+  position: relative;
+  border-style: solid;
+  border-radius: 8px;
+  width: 450px;
+  padding: 30px;
+  background-color: white;
+  margin-top: -150px;
+}
+
+.x-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  justify-self: flex-end;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
 /* STATS PAGE */
 
 .stats-background {
@@ -230,7 +262,7 @@
 
 .stats-label {
   border-style: solid;
-  border-color: rgb(27, 27, 33);
+  border-color: rgb(34, 34, 42);
   width: 170px;
   border-width: 4px;
   border-bottom-width: 2px;
@@ -248,7 +280,7 @@
 
 .stats-number {
   border-style: solid;
-  border-color: rgb(27, 27, 33);
+  border-color: rgb(34, 34, 42);
   width: 170px;
   border-width: 4px;
   border-top-width: 2px;
@@ -263,7 +295,7 @@
   display: flex;
   font-size: medium;
   font-weight: bold;
-  color: rgb(27, 27, 33);
+  color: rgb(34, 34, 42);
 }
 
 .distro-title-container {

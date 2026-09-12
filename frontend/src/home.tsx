@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { CircleQuestionMark, ChartNoAxesColumn } from "lucide-react";
+import { CircleQuestionMark, ChartNoAxesColumn, X } from "lucide-react";
 
 import type { status, gameInfo, filmCard, guessResponse, gameState } from "./helpers";
 
@@ -14,6 +14,7 @@ export function Home() {
   const navigate = useNavigate();
   const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
+  const [HTPDisplay, setHTPDisplay] = useState(false);
   const [victoryText, setVictoryText] = useState("");
   const [gameEnd, setGameEnd] = useState<gameEnd>();
   const [filmOne, setFilmOne] = useState<filmCard>();
@@ -219,13 +220,26 @@ export function Home() {
       <div className="title-row">
         <div className="actor-name">{info?.actor}</div>
         <div className="home-buttons">
-          <button className="HTP-button" onClick={() => navigate("/stats")}>
+          <button className="HTP-button" onClick={() => setHTPDisplay(true)}>
             <CircleQuestionMark />
           </button>
           <button className="stats-button" onClick={() => navigate("/stats")}>
             <ChartNoAxesColumn />
           </button>
         </div>
+        {HTPDisplay && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <button className="x-button" onClick={() => setHTPDisplay(false)}>
+                <X size={20} />
+              </button>
+              <h2>How to Play</h2>
+              <p>Guess the three most popular movies for today's actor as determined by TMDB.</p>
+              <p>Each incorrect guess gives you a strike.</p>
+              <p>Three strikes and the game is over.</p>
+            </div>
+          </div>
+        )}
       </div>
       <div className="poster-container">
         <div className="poster-card">
