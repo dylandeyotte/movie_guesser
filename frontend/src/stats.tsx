@@ -57,39 +57,53 @@ export function Stats() {
 
   return (
     <div className="stats-background">
-      <div className="stats-title-row">
-        <div className="stats-title">Stats</div>
-        <button className="return-button" onClick={() => navigate("/")}>
-          <Undo2 />
-        </button>
-      </div>
-      <div className="all-stats">
-        <div className="top-stats">
-          <div className="stat-labels-row">
-            <span className="stats-label">Games Played</span>
-            <span className="stats-label">Win Percentage</span>
-            <span className="stats-label">Perfect Games</span>
-          </div>
-          <div className="stat-numbers-row">
-            <span className="stats-number">{stats?.games_played}</span>
-            <span className="stats-number">{stats?.win_percentage}</span>
-            <span className="stats-number">{stats?.perfect_wins}</span>
-          </div>
+      <div className="stats-box">
+        <div className="stats-title-row">
+          <div className="stats-title">Stats</div>
+          <button className="return-button" onClick={() => navigate("/")}>
+            <Undo2 />
+          </button>
         </div>
-        <div className="distro-title-container">
-          <div className="distro-title">Guess Distribution</div>
-        </div>
-        <div className="distro">
-          {statsDistribution.map((stat) => (
-            <div className="distro-row" key={stat.label}>
-              <span className="distro-label">{stat.label}</span>
-              <div className="distro-track">
-                <div className="distro-bar" style={{ width: max === 0 || max === undefined ? "0%" : `${(stat.value / max) * 100}%` }}>
-                  {stat.value}
-                </div>
-              </div>
+        <div className="all-stats">
+          <div className="top-stats">
+            <div className="stat-labels-row">
+              <span className="stats-label">Games Played</span>
+              <span className="stats-label">Win Percentage</span>
+              <span className="stats-label">Perfect Games</span>
             </div>
-          ))}
+            <div className="stat-numbers-row">
+              <span className="stats-number">{stats?.games_played}</span>
+              <span className="stats-number">{stats?.win_percentage}</span>
+              <span className="stats-number">{stats?.perfect_wins}</span>
+            </div>
+          </div>
+          <div className="distro-container">
+            <div className="distro-title-container">
+              <div className="distro-title">Guess Distribution</div>
+            </div>
+            <div className="distro">
+              {statsDistribution.map((stat) => (
+                <div className="distro-row" key={stat.label}>
+                  <span className="distro-label">{stat.label}</span>
+                  <div className="distro-track">
+                    <div className="distro-bar" style={{ width: max === 0 || max === undefined ? "0%" : `${(stat.value / max) * 100}%` }}>
+                      {stat.value}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bottom-bar">
+            <div className="bottom-box"></div>
+            <div className="bottom-box"></div>
+            <div className="bottom-box"></div>
+            <div className="bottom-box"></div>
+            <div className="bottom-box"></div>
+            <div className="bottom-box"></div>
+            <div className="bottom-box"></div>
+            <div className="bottom-box"></div>
+          </div>
         </div>
       </div>
     </div>
