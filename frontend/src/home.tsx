@@ -10,10 +10,16 @@ type gameEnd = {
   defeat: boolean;
 };
 
+type searchResults = {
+  title: string;
+  id: number;
+};
+
 export function Home() {
   const navigate = useNavigate();
   const [info, setInfo] = useState<gameInfo>();
   const [guess, setGuess] = useState("");
+  const [results, setResults] = useState<searchResults[]>([]);
   const [HTPDisplay, setHTPDisplay] = useState(false);
   const [victoryText, setVictoryText] = useState("");
   const [gameEnd, setGameEnd] = useState<gameEnd>();
@@ -207,6 +213,29 @@ export function Home() {
     }
   };
 
+  async function searchFilms(title: string) {
+    {
+      try {
+        const response = await fetch("http://localhost:8080/api/search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            film: title,
+            date: info?.gamedate,
+          }),
+        });
+
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        console.error(err);
+        throw err;
+      }
+    }
+  }
+
   useEffect(() => {
     async function loadGame() {
       const gameInfo = await gamePull();
@@ -214,6 +243,22 @@ export function Home() {
     }
     loadGame();
   }, []);
+
+  useEffect(() => {
+    if (guess.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const data = await searchFilms(guess);
+      setResults(data);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [guess]);
+
+  console.log(results);
 
   return (
     <div className="background">
@@ -270,6 +315,15 @@ export function Home() {
           <div className="guess-bar-and-button">
             <form className="guess-bar-container" onSubmit={submitGuess}>
               <input className="guess-bar" type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
+              {results.length > 0 && (
+                <div className="search-results">
+                  {results.map((movie) => (
+                    <button type="button" key={movie.id}>
+                      {movie.title}
+                    </button>
+                  ))}
+                </div>
+              )}
             </form>
             <div className="give-up-container">
               <button className="give-up-button" onClick={submitGiveUp}>

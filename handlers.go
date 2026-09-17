@@ -15,6 +15,92 @@ import (
 	"github.com/google/uuid"
 )
 
+func (cfg *apiConfig) handlerSearch(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		Film string `json:"film"`
+		Date string `json:"date"`
+	}
+	params := parameters{}
+
+	// Decode response
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&params); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Decoding error", err)
+		return
+	}
+
+	fmt.Printf("guessed film: %v\n", params.Film)
+
+	// Create client
+	client := &http.Client{}
+
+	// Assemble URL
+	url := fmt.Sprintf("https://api.themoviedb.org/3/search/movie?query=%v&limit=5", params.Film)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Request creation failed", err)
+		return
+	}
+	// Set header token
+	req.Header.Set("Authorization", cfg.tmdbToken)
+
+	// HTTP Request
+	resp, err := client.Do(req)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Request failed", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	var SR SearchResults
+
+	// Decode JSON
+	decoder = json.NewDecoder(resp.Body)
+	if err := decoder.Decode(&SR); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Decoding error", err)
+		return
+	}
+
+	// Return Game
+	game, err := cfg.database.ReturnGame(r.Context(), params.Date)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error returning game", err)
+		return
+	}
+
+	// Fetch answers from db
+	answers, err := cfg.answerReveal(3, game)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error gathering answers", err)
+		return
+	}
+
+	type Payload struct {
+		Title string `json:"title"`
+		ID    int    `json:"id"`
+	}
+
+	payload := make([]Payload, 5)
+
+	// Fill payload with films
+	for n, film := range SR.Results {
+		if film.Popularity < 1 && (film.Title != answers.Film1 || film.Title != answers.Film2 || film.Title != answers.Film3) {
+			continue
+		}
+		if film.Adult {
+			continue
+		}
+		if n == 5 {
+			break
+		}
+		payload[n].Title = film.Title
+		payload[n].ID = film.ID
+	}
+
+	respondWithJSON(w, http.StatusOK, payload)
+}
+
 func (cfg *apiConfig) handlerStats(w http.ResponseWriter, r *http.Request) {
 	type gameStats struct {
 		GamesPlayed   int    `json:"games_played"`
