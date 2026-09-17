@@ -81,21 +81,31 @@ func (cfg *apiConfig) handlerSearch(w http.ResponseWriter, r *http.Request) {
 		ID    int    `json:"id"`
 	}
 
-	payload := make([]Payload, 5)
+	payload := make([]Payload, 0, 5)
+	seen := make(map[string]bool)
 
 	// Fill payload with films
 	for n, film := range SR.Results {
-		if film.Popularity < 1 && (film.Title != answers.Film1 || film.Title != answers.Film2 || film.Title != answers.Film3) {
-			continue
-		}
-		if film.Adult {
-			continue
-		}
 		if n == 5 {
 			break
 		}
-		payload[n].Title = film.Title
-		payload[n].ID = film.ID
+		// Filter out low popularity films unless its an answer
+		if film.Popularity < 2 && (film.Title != answers.Film1 || film.Title != answers.Film2 || film.Title != answers.Film3) {
+			continue
+		}
+		// Filter out adult movies
+		if film.Adult {
+			continue
+		}
+		// Filter out duplicate titles
+		if seen[film.Title] {
+			continue
+		}
+		seen[film.Title] = true
+		payload = append(payload, Payload{
+			Title: film.Title,
+			ID:    film.ID,
+		})
 	}
 
 	respondWithJSON(w, http.StatusOK, payload)

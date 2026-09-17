@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CircleQuestionMark, ChartNoAxesColumn, X } from "lucide-react";
 
@@ -29,6 +28,7 @@ export function Home() {
   const [gameState, setGameState] = useState<gameState>();
   const [guessResponse, setguessResponse] = useState<guessResponse>();
   const [incorrectGuess, setIncorrectGuess] = useState<Set<string>>(new Set());
+  const guessInputRef = useRef<HTMLInputElement>(null);
 
   const playerID = localStorage.getItem("playerID") ?? crypto.randomUUID();
 
@@ -312,23 +312,42 @@ export function Home() {
         ) : gameEnd?.defeat === true ? (
           <div className="end-text">Game Over</div>
         ) : (
-          <div className="guess-bar-and-button">
-            <form className="guess-bar-container" onSubmit={submitGuess}>
-              <input className="guess-bar" type="guess" value={guess} onChange={(e) => setGuess(e.target.value)} placeholder="Film" />
+          <div className="glorp">
+            <div className="guess-search">
               {results.length > 0 && (
                 <div className="search-results">
                   {results.map((movie) => (
-                    <button type="button" key={movie.id}>
+                    <button
+                      className="search-results-button"
+                      type="button"
+                      key={movie.id}
+                      onClick={() => {
+                        setGuess(movie.title);
+                        guessInputRef.current?.focus();
+                      }}
+                    >
                       {movie.title}
                     </button>
                   ))}
                 </div>
               )}
-            </form>
-            <div className="give-up-container">
-              <button className="give-up-button" onClick={submitGiveUp}>
-                Give Up
-              </button>
+              <div className="guess-bar-and-button">
+                <form className="guess-bar-container" onSubmit={submitGuess}>
+                  <input
+                    className="guess-bar"
+                    type="guess"
+                    ref={guessInputRef}
+                    value={guess}
+                    onChange={(e) => setGuess(e.target.value)}
+                    placeholder="Film"
+                  />
+                </form>
+                <div className="give-up-container">
+                  <button className="give-up-button" onClick={submitGiveUp}>
+                    Give Up
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -153,6 +153,55 @@
   border-style: solid;
   border-radius: 8px;
   font-size: medium;
+  padding-left: 6px;
+}
+
+.glorp {
+  display: flex;
+  justify-content: center;
+}
+
+.guess-search {
+  position: relative;
+}
+
+.search-results {
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(22px);
+  border-style: solid;
+  border-color: black;
+  border-radius: 8px;
+  border-width: 2px;
+  width: 500px;
+}
+
+.search-results-button {
+  display: flex;
+  height: 35px;
+  justify-content: flex-start;
+  align-items: center;
+  border: none;
+  background-color: white;
+  font-size: medium;
+  color: black;
+  cursor: pointer;
+}
+
+.search-results button:first-child {
+  border-radius: 5px 5px 0 0;
+}
+
+.search-results button:last-child {
+  border-radius: 0 0 5px 5px;
+}
+
+.search-results button:only-child {
+  border-radius: 5px 5px 5px 5px;
 }
 
 .missed-guess {
