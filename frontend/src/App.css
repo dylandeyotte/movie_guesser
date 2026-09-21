@@ -192,6 +192,10 @@
   cursor: pointer;
 }
 
+.search-results-button:hover {
+  background-color: rgb(226, 225, 246);
+}
+
 .search-results button:first-child {
   border-radius: 5px 5px 0 0;
 }

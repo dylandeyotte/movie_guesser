@@ -29,6 +29,7 @@ export function Home() {
   const [guessResponse, setguessResponse] = useState<guessResponse>();
   const [incorrectGuess, setIncorrectGuess] = useState<Set<string>>(new Set());
   const guessInputRef = useRef<HTMLInputElement>(null);
+  const [selectedMovie, setSelectedMovie] = useState<searchResults | null>(null);
 
   const playerID = localStorage.getItem("playerID") ?? crypto.randomUUID();
 
@@ -245,7 +246,7 @@ export function Home() {
   }, []);
 
   useEffect(() => {
-    if (guess.trim().length < 2) {
+    if (selectedMovie || guess.trim().length < 2) {
       setResults([]);
       return;
     }
@@ -256,7 +257,7 @@ export function Home() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [guess]);
+  }, [guess, selectedMovie]);
 
   console.log(results);
 
@@ -323,6 +324,8 @@ export function Home() {
                       key={movie.id}
                       onClick={() => {
                         setGuess(movie.title);
+                        setSelectedMovie(movie);
+                        setResults([]);
                         guessInputRef.current?.focus();
                       }}
                     >
@@ -338,7 +341,10 @@ export function Home() {
                     type="guess"
                     ref={guessInputRef}
                     value={guess}
-                    onChange={(e) => setGuess(e.target.value)}
+                    onChange={(e) => {
+                      setGuess(e.target.value);
+                      setSelectedMovie(null);
+                    }}
                     placeholder="Film"
                   />
                 </form>
