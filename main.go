@@ -59,6 +59,10 @@ func main() {
 	if dbURL == "" {
 		log.Fatal("No DB_URL set")
 	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("No port set")
+	}
 	tmdbToken := os.Getenv("TMDB_TOKEN")
 	if tmdbToken == "" {
 		log.Fatal("No TMDB token set")
@@ -89,7 +93,7 @@ func main() {
 
 	server := http.Server{
 		Handler: corsMiddleware(mux),
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf(":%v", port),
 	}
 
 	defer server.Close()
