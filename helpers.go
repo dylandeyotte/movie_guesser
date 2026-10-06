@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -53,6 +54,50 @@ func correctGuessesCheck(guesses []database.Guess) int {
 		}
 	}
 	return count
+}
+
+func (cfg *apiConfig) actorFetchHelper() (ActorData, database.Actor, error) {
+	for i := range 5 {
+		i++
+		// Create client
+		client := &http.Client{}
+
+		// Select actor from database
+		actor, err := cfg.database.SelectActor(context.Background())
+		if err != nil {
+			return ActorData{}, database.Actor{}, err
+		}
+		// Assemble URL
+		url := fmt.Sprintf("https://api.themoviedb.org/3/search/person?query=%v&limit=1", actor.Name)
+
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return ActorData{}, database.Actor{}, err
+		}
+		// Set header token
+		req.Header.Set("Authorization", cfg.tmdbToken)
+
+		// HTTP Request
+		resp, err := client.Do(req)
+		if err != nil {
+			return ActorData{}, database.Actor{}, err
+		}
+		defer resp.Body.Close()
+
+		var AD ActorData
+
+		// Decode JSON
+		decoder := json.NewDecoder(resp.Body)
+		if err := decoder.Decode(&AD); err != nil {
+			return ActorData{}, database.Actor{}, err
+		}
+
+		if AD.Results[0].KnownFor[0].MediaType == "tv" || AD.Results[0].KnownFor[1].MediaType == "tv" || AD.Results[0].KnownFor[2].MediaType == "tv" {
+			continue
+		}
+		return AD, actor, nil
+	}
+	return ActorData{}, database.Actor{}, errors.New("Failed to find actor")
 }
 
 func (cfg *apiConfig) createUserGameHelper(playerID uuid.UUID, date, actor string, correctGuesses, incorrectGuesses int, victory bool) error {
@@ -208,14 +253,12 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 		fmt.Println(err)
 		return Payload{}, err
 	}
-	fmt.Printf("%v guessed: %v, it was %v, strikes: %v\n", playerID, guess, verdict, strikes)
 	// If victory, create completed game in db
 	if correctGuessesCheck(updatedGuesses) == 3 {
 		if err := cfg.createUserGameHelper(playerID, date, actor, 3, int(strikes), true); err != nil {
 			fmt.Println(err)
 			return Payload{}, err
 		}
-		fmt.Printf("%v won with %v strikes. Today's actor was %v\n", playerID, strikes, actor)
 	}
 	// If defeat, create completed game in db
 	if gameOverCheck(int(strikes)) {
@@ -223,7 +266,6 @@ func (cfg *apiConfig) guessResponse(date string, filmNumber, filmID int, playerI
 			fmt.Println(err)
 			return Payload{}, err
 		}
-		fmt.Printf("%v lost with %v correct guesses. Today's actor was %v\n", playerID, correctGuessesCheck(updatedGuesses), actor)
 	}
 
 	// Return payload

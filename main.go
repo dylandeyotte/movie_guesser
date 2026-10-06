@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"database/sql"
 
@@ -34,6 +35,22 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+const frontendDir = "./frontend/dist"
+
+func handlerFrontend(w http.ResponseWriter, r *http.Request) {
+	// Join filepath
+	path := filepath.Join(frontendDir, r.URL.Path)
+
+	// Serve file if not directory
+	info, err := os.Stat(path)
+	if err == nil && !info.IsDir() {
+		http.ServeFile(w, r, path)
+		return
+	}
+	// Serve index.html
+	http.ServeFile(w, r, filepath.Join(frontendDir, "index.html"))
+}
+
 func main() {
 
 	godotenv.Load()
@@ -61,6 +78,8 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", handlerFrontend)
 
 	mux.HandleFunc("GET /api/actor", apiCfg.handlerActorFetch)
 	mux.HandleFunc("POST /api/guess", apiCfg.handlerVerifyGuess)

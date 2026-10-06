@@ -106,6 +106,7 @@
   border-style: solid;
   border-radius: 8px;
   border-color: black;
+  background-color: rgb(109, 109, 132);
 }
 
 .guess-bar-and-button {
@@ -156,7 +157,7 @@
   padding-left: 6px;
 }
 
-.glorp {
+.guess-search-container {
   display: flex;
   justify-content: center;
 }
@@ -216,6 +217,7 @@
 
 .end-text {
   margin-top: 10px;
+  height: 35px;
   font-size: larger;
   color: black;
 }

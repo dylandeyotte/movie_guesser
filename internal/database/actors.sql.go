@@ -81,6 +81,7 @@ func (q *Queries) ReturnActors(ctx context.Context) ([]Actor, error) {
 
 const selectActor = `-- name: SelectActor :one
 SELECT id, name, used FROM actors
+WHERE used = false
 ORDER BY RANDOM()
 LIMIT 1
 `

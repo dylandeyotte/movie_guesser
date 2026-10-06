@@ -29,8 +29,6 @@ func (cfg *apiConfig) handlerSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("guessed film: %v\n", params.Film)
-
 	// Create client
 	client := &http.Client{}
 
@@ -177,42 +175,10 @@ func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) 
 		respondWithJSON(w, http.StatusOK, payload)
 		return
 	}
-
-	// Create client
-	client := &http.Client{}
-
-	// Select actor from database NEED NEW QUERY NEW ACTOR NOT USED
-	actor, err := cfg.database.SelectActor(r.Context())
+	// Fetch actor
+	AD, actor, err := cfg.actorFetchHelper()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Error fetching actor", err)
-		return
-	}
-	// Assemble URL
-	url := fmt.Sprintf("https://api.themoviedb.org/3/search/person?query=%v&limit=1", actor.Name)
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Request creation failed", err)
-		return
-	}
-	// Set header token
-	req.Header.Set("Authorization", cfg.tmdbToken)
-
-	// HTTP Request
-	resp, err := client.Do(req)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Request failed", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	var AD ActorData
-
-	// Decode JSON
-	decoder := json.NewDecoder(resp.Body)
-	if err := decoder.Decode(&AD); err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Decoding error", err)
-		return
 	}
 
 	// Create Game
@@ -261,9 +227,10 @@ func (cfg *apiConfig) handlerActorFetch(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	// if err := cfg.database.MarkActor(r.Context(), actor.Name); err != nil {
-	// 	respondWithError(w, http.StatusInternalServerError, "Error marking actor", err)
-	// }
+	if err := cfg.database.MarkActor(r.Context(), actor.Name); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error marking actor", err)
+		return
+	}
 
 	// Assemble payload
 	payload := Payload{
@@ -448,35 +415,27 @@ func (cfg *apiConfig) handlerVerifyGuess(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	filmList := []struct {
+		title  string
+		number int
+		id     int
+	}{
+		{game.Film1, 1, int(game.Film1ID)},
+		{game.Film2, 2, int(game.Film2ID)},
+		{game.Film3, 3, int(game.Film3ID)},
+	}
+
 	// Check if guess matches films, create guess in database
-	if strings.EqualFold(params.Guess, game.Film1) {
-		payload, err := cfg.guessResponse(params.GameDate, 1, int(game.Film1ID), playerID, params.Guess, game.ActorName, true)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)
+	for _, film := range filmList {
+		if strings.EqualFold(params.Guess, film.title) {
+			payload, err := cfg.guessResponse(params.GameDate, film.number, film.id, playerID, params.Guess, game.ActorName, true)
+			if err != nil {
+				respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)
+				return
+			}
+			respondWithJSON(w, http.StatusOK, payload)
 			return
 		}
-		respondWithJSON(w, http.StatusOK, payload)
-		return
-	}
-
-	if strings.EqualFold(params.Guess, game.Film2) {
-		payload, err := cfg.guessResponse(params.GameDate, 2, int(game.Film2ID), playerID, params.Guess, game.ActorName, true)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)
-			return
-		}
-		respondWithJSON(w, http.StatusOK, payload)
-		return
-	}
-
-	if strings.EqualFold(params.Guess, game.Film3) {
-		payload, err := cfg.guessResponse(params.GameDate, 3, int(game.Film3ID), playerID, params.Guess, game.ActorName, true)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Error creating guess", err)
-			return
-		}
-		respondWithJSON(w, http.StatusOK, payload)
-		return
 	}
 
 	// Create guess in database for incorrect guess

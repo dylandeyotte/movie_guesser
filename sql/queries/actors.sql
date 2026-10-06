@@ -16,6 +16,7 @@ SELECT * FROM actors;
 
 -- name: SelectActor :one
 SELECT * FROM actors
+WHERE used = false
 ORDER BY RANDOM()
 LIMIT 1;
 

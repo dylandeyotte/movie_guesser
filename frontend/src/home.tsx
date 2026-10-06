@@ -74,6 +74,9 @@ export function Home() {
         }),
       });
       const data = await response.json();
+      if (response.status !== 200) {
+        throw new Error("request failed");
+      }
 
       // Set victory text
       data?.strikes && data.strikes > 0 ? setVictoryText("You did it!") : setVictoryText("Perfect!");
@@ -154,86 +157,92 @@ export function Home() {
   };
 
   const guessHelper = async (guess: string, giveUp: boolean) => {
-    const response = await fetch("http://localhost:8080/api/guess", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Player-ID": playerID,
-      },
-      body: JSON.stringify({
-        guess: guess,
-        gamedate: info?.gamedate,
-        giveup: giveUp,
-      }),
-    });
-    const data = await response.json();
-
-    // Set victory text
-    data?.strikes && data.strikes > 0 ? setVictoryText("You did it!") : setVictoryText("Perfect!");
-
-    // End game if victorious
-    if (info?.gamedate) {
-      if (data.game_over === true) {
-        setGameEnd({
-          victory: false,
-          defeat: true,
-        });
-        await gameStatePull(info?.gamedate);
+    try {
+      const response = await fetch("http://localhost:8080/api/guess", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Player-ID": playerID,
+        },
+        body: JSON.stringify({
+          guess: guess,
+          gamedate: info?.gamedate,
+          giveup: giveUp,
+        }),
+      });
+      const data = await response.json();
+      if (response.status !== 200) {
+        throw new Error("request failed");
       }
-      // End game if failed
-      if (data.victory === true) {
-        setGameEnd({
-          victory: true,
-          defeat: false,
-        });
-        await gameStatePull(info?.gamedate);
+
+      // Set victory text
+      data?.strikes && data.strikes > 0 ? setVictoryText("You did it!") : setVictoryText("Perfect!");
+
+      // End game if victorious
+      if (info?.gamedate) {
+        if (data.game_over === true) {
+          setGameEnd({
+            victory: false,
+            defeat: true,
+          });
+          await gameStatePull(info?.gamedate);
+        }
+        // End game if failed
+        if (data.victory === true) {
+          setGameEnd({
+            victory: true,
+            defeat: false,
+          });
+          await gameStatePull(info?.gamedate);
+        }
       }
-    }
 
-    // Display correct guess
-    switch (data.film_number) {
-      case 1:
-        setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 1);
-        break;
-      case 2:
-        setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 2);
-        break;
-      case 3:
-        setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 3);
-        break;
-    }
-    // Display incorrect guess
-    if (data.verdict == false) {
-      setIncorrectGuess(new Set(incorrectGuess).add(guess));
-    }
-    setguessResponse(data);
+      // Display correct guess
+      switch (data.film_number) {
+        case 1:
+          setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 1);
+          break;
+        case 2:
+          setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 2);
+          break;
+        case 3:
+          setFilmHelper(data.guess, data.poster_path[0], data.verdict === true ? "correct" : "hidden", 3);
+          break;
+      }
+      // Display incorrect guess
+      if (data.verdict == false) {
+        setIncorrectGuess(new Set(incorrectGuess).add(guess));
+      }
+      setguessResponse(data);
 
-    // Reset guess bar
-    if (response.ok) {
-      setGuess("");
+      // Reset guess bar
+      if (response.ok) {
+        setGuess("");
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
     }
   };
 
   async function searchFilms(title: string) {
-    {
-      try {
-        const response = await fetch("http://localhost:8080/api/search", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            film: title,
-            date: info?.gamedate,
-          }),
-        });
+    try {
+      const response = await fetch("http://localhost:8080/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          film: title,
+          date: info?.gamedate,
+        }),
+      });
 
-        const data = await response.json();
-        return data;
-      } catch (err) {
-        console.error(err);
-        throw err;
-      }
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      console.error(err);
+      throw err;
     }
   }
 
@@ -258,8 +267,6 @@ export function Home() {
 
     return () => clearTimeout(timer);
   }, [guess, selectedMovie]);
-
-  console.log(results);
 
   return (
     <div className="background">
@@ -313,7 +320,7 @@ export function Home() {
         ) : gameEnd?.defeat === true ? (
           <div className="end-text">Game Over</div>
         ) : (
-          <div className="glorp">
+          <div className="guess-search-container">
             <div className="guess-search">
               {results.length > 0 && (
                 <div className="search-results">
@@ -358,28 +365,34 @@ export function Home() {
           </div>
         )}
       </div>
-      <div className="strikes">
-        {(guessResponse?.strikes ?? 0) >= 1 || (gameState?.strikes ?? 0) >= 1 ? (
-          <span className="strike-box"></span>
-        ) : (
-          <span className="strike-box-empty"></span>
-        )}
-        {(guessResponse?.strikes ?? 0) >= 2 || (gameState?.strikes ?? 0) >= 2 ? (
-          <span className="strike-box"></span>
-        ) : (
-          <span className="strike-box-empty"></span>
-        )}
-        {guessResponse?.strikes === 3 || gameState?.strikes === 3 ? (
-          <span className="strike-box"></span>
-        ) : (
-          <span className="strike-box-empty"></span>
-        )}
-      </div>
-      <div className="missed-guess">
-        {[...incorrectGuess].map((guess) => (
-          <div key={guess}>{guess}</div>
-        ))}
-      </div>
+      {gameEnd?.victory === true && victoryText === "Perfect!" ? (
+        ""
+      ) : (
+        <div>
+          <div className="strikes">
+            {(guessResponse?.strikes ?? 0) >= 1 || (gameState?.strikes ?? 0) >= 1 ? (
+              <span className="strike-box"></span>
+            ) : (
+              <span className="strike-box-empty"></span>
+            )}
+            {(guessResponse?.strikes ?? 0) >= 2 || (gameState?.strikes ?? 0) >= 2 ? (
+              <span className="strike-box"></span>
+            ) : (
+              <span className="strike-box-empty"></span>
+            )}
+            {guessResponse?.strikes === 3 || gameState?.strikes === 3 ? (
+              <span className="strike-box"></span>
+            ) : (
+              <span className="strike-box-empty"></span>
+            )}
+          </div>
+          <div className="missed-guess">
+            {[...incorrectGuess].map((guess) => (
+              <div key={guess}>{guess}</div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -17,7 +17,9 @@ import (
 func main() {
 
 	removeList := []string{
-		"Jenny Agutter",
+		"Kathleen Robertson",
+		"Paul Mescal",
+		"Tony Leung Chiu-wai",
 	}
 	// Load data from ENV
 	godotenv.Load()
