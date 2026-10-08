@@ -28,7 +28,7 @@ export function Stats() {
 
   async function statsPull() {
     try {
-      const response = await fetch("http://localhost:8080/api/stats", {
+      const response = await fetch("/api/stats", {
         headers: {
           "content-type": "application/json",
           "X-Player-ID": playerID,

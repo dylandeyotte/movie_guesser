@@ -63,7 +63,7 @@ export function Home() {
 
   async function gameStatePull(date: string) {
     try {
-      const response = await fetch("http://localhost:8080/api/gamestate", {
+      const response = await fetch("/api/gamestate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -132,7 +132,7 @@ export function Home() {
 
   async function gamePull() {
     try {
-      const response = await fetch("http://localhost:8080/api/actor", {
+      const response = await fetch("/api/actor", {
         headers: {
           "Content-Type": "application/json",
         },
@@ -158,7 +158,7 @@ export function Home() {
 
   const guessHelper = async (guess: string, giveUp: boolean) => {
     try {
-      const response = await fetch("http://localhost:8080/api/guess", {
+      const response = await fetch("/api/guess", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -227,7 +227,7 @@ export function Home() {
 
   async function searchFilms(title: string) {
     try {
-      const response = await fetch("http://localhost:8080/api/search", {
+      const response = await fetch("/api/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
