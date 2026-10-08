@@ -71,16 +71,9 @@ func main() {
 	}
 	dbQueries := database.New(db)
 
-	if len(os.Args) < 2 {
-		fmt.Println("no argument")
-		return
-	}
-
-	actorName := os.Args[1:]
-
 	client := &http.Client{}
 
-	url := fmt.Sprintf("https://api.themoviedb.org/3/search/person?query=%v", actorName)
+	url := "https://api.themoviedb.org/3/person/popular?page=75"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -106,19 +99,27 @@ func main() {
 		fmt.Printf("decoding error: %v\n", err)
 	}
 
-	actor, err := dbQueries.InsertActor(context.Background(), database.InsertActorParams{
-		ID:   int32(AD.Results[0].ID),
-		Name: AD.Results[0].Name,
-	})
-	if err != nil {
-		fmt.Printf("Error adding %v to database: %v\n", AD.Results[0].Name, err)
-		return
+	for _, actor := range AD.Results {
+		if actor.KnownFor[0].VoteCount < 4000 {
+			fmt.Printf("RANDO ALERT: %v\n", actor.Name)
+			continue
+		}
+		if actor.KnownForDepartment != "Acting" {
+			fmt.Printf("NOT AN ACTOR: %v\n", actor.Name)
+			continue
+		}
+		if actor.KnownFor[0].MediaType == "tv" || actor.KnownFor[1].MediaType == "tv" || actor.KnownFor[2].MediaType == "tv" {
+			fmt.Printf("TV actor: %v\n", actor.Name)
+			continue
+		}
+		actor, err := dbQueries.InsertActor(context.Background(), database.InsertActorParams{
+			ID:   int32(actor.ID),
+			Name: actor.Name,
+		})
+		if err != nil {
+			fmt.Printf("failed to load actor %v into database: %v\n", actor.Name, err)
+		}
+		fmt.Println(actor.Name)
 	}
-	if AD.Results[0].KnownFor[0].MediaType == "tv" || AD.Results[0].KnownFor[1].MediaType == "tv" || AD.Results[0].KnownFor[2].MediaType == "tv" {
-		fmt.Printf("TV actor: %v\n", actor.Name)
-		return
-	}
-
-	fmt.Printf("%v added to database\n", actor.Name)
 
 }

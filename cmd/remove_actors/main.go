@@ -20,6 +20,17 @@ func main() {
 		"Kathleen Robertson",
 		"Paul Mescal",
 		"Tony Leung Chiu-wai",
+		"Kajol",
+		"Koyuki",
+		"Kevin Corrigan",
+		"Olivier Richters",
+		"Fan Bingbing",
+		"Marc Blucas",
+		"Dawn Olivieri",
+		"Tracey Ullman",
+		"Kaya Scodelario",
+		"Dimple Kapadia",
+		"Laura Haddock",
 	}
 	// Load data from ENV
 	godotenv.Load()

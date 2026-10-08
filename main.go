@@ -61,7 +61,7 @@ func main() {
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Fatal("No port set")
+		port = "8080"
 	}
 	tmdbToken := os.Getenv("TMDB_TOKEN")
 	if tmdbToken == "" {
